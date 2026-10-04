@@ -24,11 +24,15 @@ export async function ensureProfile(id: string, region: RegionCode | null = null
   return created;
 }
 
+const CLASSIC_KINDS = new Set<Play['kind']>(['daily', 'vault', 'pitch', 'unlimited']);
+
 /** Finished plays as LocalPlayRecords, so the same summarize() powers local and synced stats. */
 export function playsToRecords(plays: Play[]): LocalPlayRecord[] {
   const out: LocalPlayRecord[] = [];
   for (const p of plays) {
     if (p.status !== 'won' && p.status !== 'lost') continue;
+    // Mode plays (Opening Weekend scores, Casting Call chains...) have different take semantics.
+    if (!CLASSIC_KINDS.has(p.kind)) continue;
     out.push({
       kind: p.kind,
       ref: p.ref,
