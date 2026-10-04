@@ -1,0 +1,29 @@
+/* Design tokens (Section 6.2). Variable names are a contract; WS4 may retune values from the
+   SFA site source but must keep every name below.
+   Status colors (--green, --amber, --miss, --red-rec) are never used decoratively. */
+
+:root {
+  --bg: #0c0b0a;            /* projection-booth black */
+  --surface: #161412;
+  --surface-2: #1f1c19;
+  --ink: #f2ede4;           /* film-print cream */
+  --ink-dim: #a39b8e;
+  --rule: #34302b;
+  --green: #2fbf71;         /* the greenlight; MATCH */
+  --green-ink: #06210f;
+  --amber: #e8a93a;         /* CLOSE (numeric only) */
+  --amber-ink: #2a1a00;
+  --miss: #3a3633;          /* NO MATCH */
+  --red-rec: #e5484d;       /* REC dot, loss state accents only */
+}
+
+/* Colorblind mode (Section 6.7): swap green/amber for blue/orange. Patterns are added by
+   components via [data-colorblind="true"] selectors. */
+[data-colorblind="true"] {
+  --green: #3b8eea;
+  --green-ink: #04172e;
+  --amber: #f08a24;
+  --amber-ink: #2b1400;
+}
+
+[data-theme="light"] { /* optional "daylight print" theme, phase 2 */ }

@@ -1,0 +1,48 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* Expose tokens to Tailwind utilities: bg-bg, text-ink, bg-green, border-rule, ... */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-rule: var(--rule);
+  --color-green: var(--green);
+  --color-green-ink: var(--green-ink);
+  --color-amber: var(--amber);
+  --color-amber-ink: var(--amber-ink);
+  --color-miss: var(--miss);
+  --color-red-rec: var(--red-rec);
+  --font-display: var(--font-display, ui-sans-serif, system-ui, sans-serif);
+  --font-serif: var(--font-serif, ui-serif, Georgia, serif);
+  --font-mono: var(--font-mono, ui-monospace, monospace);
+  --font-sans: var(--font-body, ui-sans-serif, system-ui, sans-serif);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
