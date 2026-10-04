@@ -1,20 +1,97 @@
 /* Design tokens (Section 6.2). Variable names are a contract; WS4 may retune values from the
    SFA site source but must keep every name below.
-   Status colors (--green, --amber, --miss, --red-rec) are never used decoratively. */
+   Status colors (--green, --amber, --miss, --red-rec) are never used decoratively.
+
+   Retuned by WS4 from the UNC Student Film Association source (app/styles/tokens.css):
+   SFA "ink" #0E0D0C is our projection-booth black, SFA "paper" #F5F2EB is our film-print cream,
+   SFA ink-hair / 16% paper-on-ink rules are flattened to solid hex so contrast can be tested.
+   SFA REC #E0261F is 4.1:1 on black, so the REC token is lifted to #F04A42 (5.3:1) to stay AA
+   when it carries text. See src/styles/README.md. */
 
 :root {
-  --bg: #0c0b0a;            /* projection-booth black */
-  --surface: #161412;
-  --surface-2: #1f1c19;
-  --ink: #f2ede4;           /* film-print cream */
-  --ink-dim: #a39b8e;
-  --rule: #34302b;
+  --bg: #0e0d0c;            /* projection-booth black (SFA --ink) */
+  --surface: #171513;
+  --surface-2: #221f1c;
+  --ink: #f5f2eb;           /* film-print cream (SFA --paper) */
+  --ink-dim: #a8a196;       /* 7.6:1 on --bg, 6.4:1 on --surface-2 */
+  --rule: #36332f;          /* SFA rgba(245,242,235,.16) on ink, flattened */
   --green: #2fbf71;         /* the greenlight; MATCH */
   --green-ink: #06210f;
   --amber: #e8a93a;         /* CLOSE (numeric only) */
   --amber-ink: #2a1a00;
   --miss: #3a3633;          /* NO MATCH */
-  --red-rec: #e5484d;       /* REC dot, loss state accents only */
+  --red-rec: #f04a42;       /* REC dot, loss state accents only */
+
+  /* ---- Extended tokens (WS4, additive; not part of the WS0 contract) ---------------------- */
+
+  /* Neutral helpers derived from ink. Never status. */
+  --ink-faint: rgba(245, 242, 235, 0.16);
+  --ink-hair: rgba(245, 242, 235, 0.09);
+  --ink-ghost: rgba(245, 242, 235, 0.05);
+  --perf: rgba(245, 242, 235, 0.88);     /* sprocket hole color on leader strips */
+  --scrim: rgba(8, 7, 6, 0.78);          /* dialog backdrop */
+
+  /* Type: font stacks. --font-display / --font-serif / --font-mono / --font-body are set by
+     next/font on <html> (src/app/layout.tsx); these are the fallbacks. */
+  --f-display: var(--font-display, "Big Shoulders Display"), "Big Shoulders Display", Impact, "Arial Narrow Bold", sans-serif;
+  --f-serif: var(--font-serif, "Instrument Serif"), "Instrument Serif", Georgia, "Times New Roman", serif;
+  --f-mono: var(--font-mono, "Courier Prime"), "Courier Prime", "Courier New", Courier, monospace;
+  --f-body: var(--font-body, "Helvetica Neue"), "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* Type scale (SFA, compressed one tier for a dense game UI). */
+  --t-mega: clamp(64px, 13vw, 200px);
+  --t-d1: clamp(44px, 8vw, 120px);
+  --t-d2: clamp(32px, 5vw, 76px);
+  --t-d3: clamp(24px, 3.2vw, 44px);
+  --t-lede: clamp(19px, 2vw, 28px);
+  --t-body: clamp(15px, 1.1vw, 17px);
+  --t-small: clamp(13px, 0.95vw, 15px);
+  --t-label: clamp(12px, 0.86vw, 13px);
+  --t-micro: clamp(10.5px, 0.75vw, 12px);
+
+  --tr-tight: -0.01em;
+  --tr-wide: 0.06em;
+  --tr-mega: 0.14em;
+
+  --lh-solid: 0.86;
+  --lh-tight: 1.06;
+  --lh-body: 1.6;
+
+  /* Space (SFA scale, 4px base). */
+  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px; --s5: 24px;
+  --s6: 32px; --s7: 48px; --s8: 64px; --s9: 96px; --s10: 128px;
+
+  --margin: clamp(16px, 4vw, 64px);  /* 16px gutter at 375px */
+  --gutter: clamp(12px, 1.4vw, 24px);
+  --measure: 64ch;
+  --page-max: 1200px;
+
+  /* Film: physical constants for perforations, leader strips and frames (SFA). */
+  --perf-w: 8px;
+  --perf-h: 11px;
+  --perf-gap: 20px;
+  --radius: 3px;
+
+  /* Motion (SFA eases and durations). */
+  --e-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --e-inout: cubic-bezier(0.76, 0, 0.24, 1);
+  --e-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --e-snap: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --d1: 160ms;
+  --d2: 320ms;
+  --d3: 560ms;
+  --d4: 900ms;
+  --d5: 1300ms;
+  --stagger: 80ms;          /* cell flip stagger (Section 4.1) */
+
+  /* Depth. */
+  --z-content: 1;
+  --z-header: 100;
+  --z-grain: 150;
+  --z-dialog: 300;
+  --z-toast: 350;
+  --z-leader: 400;
+  --z-skip: 500;
 }
 
 /* Colorblind mode (Section 6.7): swap green/amber for blue/orange. Patterns are added by

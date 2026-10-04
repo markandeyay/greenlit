@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "./tokens.css";
+@import "./ui.css";
+@import "./film.css";
 
 /* Expose tokens to Tailwind utilities: bg-bg, text-ink, bg-green, border-rule, ... */
 @theme inline {
@@ -15,34 +17,270 @@
   --color-amber-ink: var(--amber-ink);
   --color-miss: var(--miss);
   --color-red-rec: var(--red-rec);
+  --color-ink-faint: var(--ink-faint);
+  --color-ink-hair: var(--ink-hair);
   --font-display: var(--font-display, ui-sans-serif, system-ui, sans-serif);
   --font-serif: var(--font-serif, ui-serif, Georgia, serif);
   --font-mono: var(--font-mono, ui-monospace, monospace);
   --font-sans: var(--font-body, ui-sans-serif, system-ui, sans-serif);
+  --ease-out-film: var(--e-out);
+  --ease-snap: var(--e-snap);
 }
+
+/* ---- Base ------------------------------------------------------------------------------ */
 
 html {
   color-scheme: dark;
+  /* Body face: a plain grotesk from the system, as on the SFA site. next/font supplies the
+     three web families (display, serif accent, mono); see src/app/layout.tsx. */
+  --font-body: "Helvetica Neue", Helvetica, Arial, ui-sans-serif, system-ui, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
+  background: var(--bg);
 }
 
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: var(--font-sans);
+  font-family: var(--f-body);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
+::selection {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* Focus: invisible for mouse users, unmissable for keyboard users. Cream, not REC: REC is a
+   loss accent only. A dark halo keeps the ring visible on cream surfaces too. */
 :focus-visible {
   outline: 2px solid var(--ink);
-  outline-offset: 2px;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px var(--bg);
+  border-radius: 2px;
 }
 
+[id] {
+  scroll-margin-top: 88px;
+}
+
+/* ---- Type primitives (SFA ty-* roles) ------------------------------------------------- */
+
+@layer components {
+  .ty-display {
+    font-family: var(--f-display);
+    font-weight: 900;
+    line-height: var(--lh-solid);
+    letter-spacing: var(--tr-tight);
+    text-transform: uppercase;
+  }
+  /* The italic serif accent word inside a display heading: "The *Vault*". */
+  .ty-accent {
+    font-family: var(--f-serif);
+    font-style: italic;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    /* Instrument Serif sits small next to a 900 condensed cap; lift it a touch. */
+    font-size: 1.08em;
+    line-height: 0.8;
+    padding-inline: 0.04em 0.06em;
+  }
+  .ty-label {
+    font-family: var(--f-mono);
+    font-size: var(--t-label);
+    font-weight: 700;
+    letter-spacing: var(--tr-wide);
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .ty-micro {
+    font-family: var(--f-mono);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    letter-spacing: var(--tr-mega);
+    text-transform: uppercase;
+  }
+  .ty-num {
+    font-family: var(--f-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+  }
+  .ty-body {
+    font-size: var(--t-body);
+    line-height: var(--lh-body);
+    max-width: var(--measure);
+  }
+  .ty-lede {
+    font-size: var(--t-lede);
+    line-height: 1.35;
+    max-width: 40ch;
+  }
+
+  /* Layout primitive: page column with the SFA margin (16px at 375px). */
+  .l-page {
+    width: 100%;
+    max-width: calc(var(--page-max) + var(--margin) * 2);
+    margin-inline: auto;
+    padding-inline: var(--margin);
+  }
+
+  /* Prose for content pages (How to play). */
+  .prose-film p,
+  .prose-film li {
+    max-width: var(--measure);
+    color: var(--ink);
+  }
+  .prose-film p + p {
+    margin-top: var(--s3);
+  }
+  .prose-film strong {
+    font-weight: 700;
+  }
+  .prose-film a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+  .prose-film a:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+
+/* ---- Utilities ------------------------------------------------------------------------- */
+
+@utility sr-only-focusable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  &:focus,
+  &:focus-visible {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+  }
+}
+
+/* A strip of 35mm perforations as a background, for leader bars. */
+@utility perfs {
+  background-image:
+    repeating-linear-gradient(90deg, transparent 0 calc((var(--perf-gap) - var(--perf-w)) / 2), var(--perf) calc((var(--perf-gap) - var(--perf-w)) / 2) calc((var(--perf-gap) + var(--perf-w)) / 2), transparent calc((var(--perf-gap) + var(--perf-w)) / 2) var(--perf-gap)),
+    repeating-linear-gradient(90deg, transparent 0 calc((var(--perf-gap) - var(--perf-w)) / 2), var(--perf) calc((var(--perf-gap) - var(--perf-w)) / 2) calc((var(--perf-gap) + var(--perf-w)) / 2), transparent calc((var(--perf-gap) + var(--perf-w)) / 2) var(--perf-gap));
+  background-size: var(--perf-gap) var(--perf-h), var(--perf-gap) var(--perf-h);
+  background-repeat: repeat-x, repeat-x;
+  background-position: 0 4px, 0 calc(100% - 4px);
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Keyframes (shared; every use is disabled under reduced motion below) -------------- */
+
+@keyframes gl-clap {
+  0% { transform: rotate(-16deg); }
+  55% { transform: rotate(0deg); }
+  70% { transform: rotate(-7deg); }
+  100% { transform: rotate(var(--arm-rest, -4deg)); }
+}
+@keyframes gl-rec-blink {
+  0%, 60% { opacity: 1; }
+  61%, 100% { opacity: 0.25; }
+}
+@keyframes gl-flip-in {
+  0% { transform: perspective(600px) rotateX(-92deg); opacity: 0; }
+  60% { opacity: 1; }
+  100% { transform: perspective(600px) rotateX(0deg); opacity: 1; }
+}
+@keyframes gl-stamp {
+  0% { transform: scale(2.4) rotate(-14deg); opacity: 0; }
+  60% { transform: scale(0.94) rotate(-7deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-8deg); opacity: 1; }
+}
+@keyframes gl-flicker {
+  0%, 100% { opacity: 1; }
+  8% { opacity: 0.82; }
+  10% { opacity: 1; }
+  41% { opacity: 0.9; }
+  43% { opacity: 1; }
+  77% { opacity: 0.86; }
+  78% { opacity: 1; }
+}
+@keyframes gl-grain-shift {
+  0% { transform: translate3d(0, 0, 0); }
+  25% { transform: translate3d(-3%, 2%, 0); }
+  50% { transform: translate3d(2%, -3%, 0); }
+  75% { transform: translate3d(-2%, -1%, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+@keyframes gl-reel-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes gl-rise {
+  from { transform: translate3d(0, 8px, 0); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes gl-flash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Utility classes other workstreams can use for the motions in Section 6.6. */
+@layer components {
+  .anim-flip {
+    animation: gl-flip-in var(--d2) var(--e-out) both;
+    animation-delay: calc(var(--i, 0) * var(--stagger));
+    transform-origin: 50% 0;
+    backface-visibility: hidden;
+  }
+  .anim-stamp {
+    animation: gl-stamp 420ms var(--e-snap) both;
+  }
+  .anim-flicker {
+    animation: gl-flicker 2.8s steps(1) infinite;
+  }
+  .anim-rise {
+    animation: gl-rise var(--d3) var(--e-out) both;
+  }
+}
+
+/* ---- Reduced motion ---------------------------------------------------------------------
+   Honors the OS setting unless the player forced motion on (data-reduced-motion="off"), and
+   forces it off when the player chose "on" in Settings. src/lib/settings.ts stamps the
+   attribute on <html>. Nothing is left half-animated: animations jump to their end state. */
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  html:not([data-reduced-motion="off"]) *,
+  html:not([data-reduced-motion="off"]) *::before,
+  html:not([data-reduced-motion="off"]) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
+}
+html[data-reduced-motion="on"] *,
+html[data-reduced-motion="on"] *::before,
+html[data-reduced-motion="on"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  animation-delay: 0ms !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
 }

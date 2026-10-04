@@ -1,0 +1,793 @@
+/* Film-set chrome (WS4), file named film.css: skip link, head leader, nav, timecode, mobile menu, footer and tail leader,
+   grain, the countdown leader, and the motif components (scene heading, slate metadata,
+   breadcrumb, end credits). Ported from the SFA site's chrome.css / components.css and
+   refitted for a dark, single-surface game. */
+
+@layer components {
+  /* ---- Skip link ---------------------------------------------------------------------- */
+  .gl-skip {
+    position: fixed;
+    top: -200px;
+    left: var(--margin);
+    z-index: var(--z-skip);
+    padding: var(--s3) var(--s5);
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-label);
+    letter-spacing: var(--tr-wide);
+    text-transform: uppercase;
+  }
+  .gl-skip:focus,
+  .gl-skip:focus-visible {
+    top: var(--s3);
+  }
+
+  /* ---- REC dot (the one sanctioned decorative use of --red-rec) ----------------------- */
+  .gl-rec {
+    display: inline-block;
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--red-rec);
+    animation: gl-rec-blink 1.6s steps(1) infinite;
+  }
+
+  /* ---- Leader strips: head (top of page) and tail (footer) ---------------------------- */
+  .gl-strip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s4);
+    padding-inline: var(--margin);
+    background-color: var(--bg);
+    color: var(--ink-dim);
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    --perf: var(--ink-faint);
+  }
+  .gl-strip--head {
+    height: 30px;
+    padding-top: 10px;
+    background-image: repeating-linear-gradient(90deg, transparent 0 6px, var(--perf) 6px 14px, transparent 14px var(--perf-gap));
+    background-size: var(--perf-gap) 8px;
+    background-repeat: repeat-x;
+    background-position: 0 3px;
+  }
+  .gl-strip--tail {
+    height: calc(var(--perf-h) * 2 + 26px);
+    --perf: rgba(245, 242, 235, 0.22);
+  }
+  .gl-strip__group {
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    min-width: 0;
+  }
+  .gl-strip__hide-sm {
+    display: none;
+  }
+  @media (min-width: 720px) {
+    .gl-strip__hide-sm {
+      display: inline;
+    }
+  }
+
+  /* ---- Header / Nav: one line of camera OSD ------------------------------------------- */
+  .gl-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+    background: var(--bg);
+    border-bottom: 1px solid var(--rule);
+  }
+  .gl-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    min-height: 60px;
+    padding-inline: var(--margin);
+  }
+  .gl-nav__mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex: none;
+    min-height: 44px;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .gl-nav__word {
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: 26px;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+  .gl-nav__links {
+    display: none;
+    align-items: center;
+    margin-inline-start: var(--s3);
+  }
+  .gl-nav__link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: clamp(0.7em, 1.1vw, 1.1em);
+    color: var(--ink-dim);
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-label);
+    letter-spacing: var(--tr-wide);
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: color var(--d2) var(--e-out);
+  }
+  /* the reel list reads as edge print: frame lines between the names */
+  .gl-nav__link + .gl-nav__link::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 32%;
+    bottom: 32%;
+    width: 1px;
+    background: var(--rule);
+  }
+  .gl-nav__link::after {
+    content: "";
+    position: absolute;
+    left: clamp(0.7em, 1.1vw, 1.1em);
+    right: clamp(0.7em, 1.1vw, 1.1em);
+    bottom: 8px;
+    height: 2px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: 100% 50%;
+    transition: transform var(--d2) var(--e-inout);
+  }
+  .gl-nav__link:hover {
+    color: var(--ink);
+  }
+  .gl-nav__link:hover::after {
+    transform: scaleX(1);
+    transform-origin: 0 50%;
+  }
+  .gl-nav__link[aria-current="page"] {
+    color: var(--ink);
+  }
+  .gl-nav__link[aria-current="page"]::after {
+    transform: scaleX(1);
+  }
+  /* Active marker that does not rely on the underline alone: a frame tick. */
+  .gl-nav__link[aria-current="page"] .gl-nav__tick {
+    display: inline-block;
+  }
+  .gl-nav__tick {
+    display: none;
+    width: 5px;
+    height: 5px;
+    margin-inline-end: 0.5em;
+    background: currentColor;
+  }
+  .gl-nav__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    margin-inline-start: auto;
+  }
+  .gl-nav__icons {
+    display: none;
+    align-items: center;
+  }
+  .gl-nav__pitch {
+    display: none;
+  }
+  .gl-nav__tc {
+    display: none;
+  }
+  .gl-nav__burger {
+    display: inline-grid;
+  }
+  @media (min-width: 560px) {
+    .gl-nav__tc {
+      display: inline-flex;
+    }
+  }
+  @media (min-width: 1024px) {
+    .gl-nav__links,
+    .gl-nav__icons {
+      display: flex;
+    }
+    .gl-nav__pitch {
+      display: inline-flex;
+      margin-inline-start: var(--s2);
+    }
+    .gl-nav__burger {
+      display: none;
+    }
+  }
+
+  /* Mobile menu (disclosure) */
+  .gl-menu {
+    border-top: 1px solid var(--rule);
+    background: var(--bg);
+    padding: var(--s3) var(--margin) var(--s5);
+    max-height: calc(100dvh - 90px);
+    overflow-y: auto;
+  }
+  .gl-menu[hidden] {
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    .gl-menu {
+      display: none;
+    }
+  }
+  .gl-menu__list {
+    display: grid;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .gl-menu__link {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s3);
+    min-height: 52px;
+    padding-block: var(--s2);
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink);
+    text-decoration: none;
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: 30px;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+  .gl-menu__link .gl-menu__n {
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-micro);
+    letter-spacing: var(--tr-wide);
+    color: var(--ink-dim);
+    min-width: 2.4em;
+  }
+  .gl-menu__link[aria-current="page"] {
+    text-decoration: underline;
+    text-decoration-thickness: 3px;
+    text-underline-offset: 6px;
+  }
+  .gl-menu__link--sm {
+    font-family: var(--f-mono);
+    font-size: var(--t-small);
+    font-weight: 700;
+    letter-spacing: var(--tr-wide);
+    min-height: 46px;
+    align-items: center;
+  }
+  .gl-menu__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s4);
+    margin-top: var(--s5);
+  }
+
+  /* ---- Timecode ----------------------------------------------------------------------- */
+  .gl-tc {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55em;
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-label);
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .gl-tc__k {
+    color: var(--ink-dim);
+    letter-spacing: var(--tr-wide);
+  }
+  .gl-tc__v {
+    font-variant-numeric: tabular-nums;
+    min-width: 11ch;
+    contain: layout paint;
+  }
+  .gl-tc--lg {
+    font-size: var(--t-lede);
+  }
+
+  /* ---- Microcopy: 24 fps, 2.39 : 1 ---------------------------------------------------- */
+  .gl-micro {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0 1.2em;
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-micro);
+    letter-spacing: var(--tr-mega);
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  /* ---- Slate metadata ----------------------------------------------------------------- */
+  .gl-slate-meta {
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-label);
+    letter-spacing: var(--tr-wide);
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .gl-slate-meta b {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  /* ---- Breadcrumb --------------------------------------------------------------------- */
+  .gl-crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 0.55em;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-label);
+    letter-spacing: var(--tr-wide);
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .gl-crumbs li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55em;
+  }
+  .gl-crumbs a {
+    color: var(--ink-dim);
+    text-decoration: none;
+    padding-block: 0.4em;
+  }
+  .gl-crumbs a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .gl-crumbs [aria-current="page"] {
+    color: var(--ink);
+  }
+  .gl-crumbs__sep {
+    font-size: 0.85em;
+    opacity: 0.8;
+  }
+
+  /* ---- Scene heading: a script page head ---------------------------------------------- */
+  .gl-scene {
+    position: relative;
+  }
+  .gl-scene__rule {
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+    padding-bottom: var(--s2);
+    border-bottom: 1.5px solid var(--ink);
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-small);
+    letter-spacing: var(--tr-wide);
+    text-transform: uppercase;
+  }
+  .gl-scene__n {
+    flex: none;
+    min-width: 2.2em;
+    font-size: var(--t-label);
+    font-variant-numeric: tabular-nums;
+  }
+  .gl-scene__n:last-child {
+    text-align: right;
+  }
+  .gl-scene__slug {
+    flex: 1;
+    min-width: 0;
+  }
+  .gl-scene__slug em {
+    font-style: normal;
+    color: var(--ink-dim);
+  }
+  .gl-scene__ln {
+    flex: none;
+    width: clamp(12px, 4vw, 64px);
+    height: 1px;
+    background: var(--rule);
+  }
+  .gl-scene__meta {
+    margin: var(--s2) 0 0 1.5em;
+    max-width: 56ch;
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-small);
+    line-height: 1.7;
+    color: var(--ink-dim);
+  }
+  .gl-scene__title {
+    display: block;
+    margin-top: var(--s4);
+    font-size: var(--t-d2);
+  }
+  .gl-scene--sm .gl-scene__title {
+    font-size: var(--t-d3);
+  }
+  .gl-scene--lg .gl-scene__title {
+    font-size: var(--t-d1);
+  }
+  @media (max-width: 480px) {
+    .gl-scene__ln {
+      display: none;
+    }
+  }
+
+  /* ---- End credits (credit roll) ------------------------------------------------------ */
+  .gl-roll {
+    display: grid;
+    gap: var(--s2);
+    margin: 0;
+  }
+  .gl-roll__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: var(--s5);
+    align-items: baseline;
+  }
+  .gl-roll__role {
+    text-align: right;
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-label);
+    letter-spacing: var(--tr-wide);
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .gl-roll__name {
+    margin: 0;
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: clamp(18px, 1.9vw, 28px);
+    line-height: 1.05;
+    letter-spacing: var(--tr-tight);
+    text-transform: uppercase;
+  }
+
+  /* ---- Footer: THE END bracketed by tail leader --------------------------------------- */
+  .gl-footer {
+    position: relative;
+    margin-top: var(--s9);
+    background: var(--bg);
+    color: var(--ink);
+    border-top: 1px solid var(--rule);
+  }
+  .gl-footer__inner {
+    padding: var(--s8) var(--margin) var(--s7);
+    text-align: center;
+  }
+  .gl-footer__end {
+    display: grid;
+    justify-items: center;
+    gap: var(--s3);
+  }
+  .gl-footer__big {
+    font-family: var(--f-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: clamp(72px, 15vw, 200px);
+    line-height: 0.82;
+    letter-spacing: -0.01em;
+  }
+  .gl-footer__big .ty-accent {
+    font-size: 0.9em;
+  }
+  .gl-footer__sub {
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-label);
+    letter-spacing: var(--tr-wide);
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .gl-footer__credits {
+    max-width: 560px;
+    margin: var(--s7) auto 0;
+  }
+  .gl-footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: var(--s7);
+    list-style: none;
+    padding: 0;
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-label);
+    letter-spacing: var(--tr-wide);
+    text-transform: uppercase;
+  }
+  .gl-footer__links li + li {
+    border-inline-start: 1px solid var(--rule);
+  }
+  .gl-footer__links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: 0.9em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .gl-footer__links a:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .gl-footer__tmdb {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--s3);
+    margin: var(--s7) auto 0;
+    max-width: 520px;
+    font-size: var(--t-small);
+    color: var(--ink-dim);
+  }
+  .gl-footer__fine {
+    margin: var(--s5) auto 0;
+    max-width: 60ch;
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-micro);
+    line-height: 1.9;
+    letter-spacing: var(--tr-wide);
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  /* TMDB mark: text wordmark in TMDB's brand gradient (swap for the official SVG in
+     public/brand/ when it is added). */
+  .gl-tmdb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .gl-tmdb__word {
+    display: inline-block;
+    padding: 0.15em 0.5em 0.1em;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #90cea1, #3cbec9 56%, #00b3e5);
+    color: #0d253f;
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: 20px;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+  }
+
+  /* ---- Grain + vignette --------------------------------------------------------------- */
+  .gl-grain {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-grain);
+    pointer-events: none;
+    overflow: hidden;
+    contain: strict;
+  }
+  .gl-grain::before {
+    content: "";
+    position: absolute;
+    inset: -10%;
+    opacity: 0.55;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.96  0 0 0 0 0.95  0 0 0 0 0.92  0.11 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .gl-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(0, 0, 0, 0.35) 100%);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .gl-grain--live::before {
+      animation: gl-grain-shift 0.9s steps(4) infinite;
+    }
+  }
+
+  /* ---- The countdown leader (Section 6.1, 6.6) ---------------------------------------- */
+  .gl-leader {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-leader);
+    display: grid;
+    place-items: center;
+    background: var(--bg);
+    color: var(--ink);
+    clip-path: inset(0 0 0 0);
+    cursor: pointer;
+    user-select: none;
+  }
+  .gl-leader[data-state="out"] {
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 220ms var(--e-inout);
+  }
+  .gl-leader[data-state="flash"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--ink);
+    animation: gl-flash 120ms steps(2) 1 forwards;
+  }
+  .gl-leader__frame {
+    position: relative;
+    width: min(64vmin, 460px);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+  }
+  .gl-leader__marks {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .gl-leader__marks * {
+    fill: none;
+    stroke: rgba(245, 242, 235, 0.5);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+  .gl-leader__sweep {
+    position: absolute;
+    inset: 9%;
+    border-radius: 50%;
+    background: rgba(245, 242, 235, 0.14);
+    -webkit-mask: conic-gradient(from 0deg, #000 var(--sweep, 0deg), transparent var(--sweep, 0deg));
+    mask: conic-gradient(from 0deg, #000 var(--sweep, 0deg), transparent var(--sweep, 0deg));
+  }
+  .gl-leader__num {
+    position: relative;
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: clamp(120px, 34vmin, 280px);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .gl-leader__meta {
+    position: absolute;
+    left: 50%;
+    bottom: -14%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: var(--s5);
+    white-space: nowrap;
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-label);
+    letter-spacing: var(--tr-mega);
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .gl-leader__meta b {
+    color: var(--ink);
+  }
+  .gl-leader__corner {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    border: 2px solid rgba(245, 242, 235, 0.4);
+  }
+  .gl-leader__corner--tl { top: var(--s5); left: var(--s5); border-right: 0; border-bottom: 0; }
+  .gl-leader__corner--tr { top: var(--s5); right: var(--s5); border-left: 0; border-bottom: 0; }
+  .gl-leader__corner--bl { bottom: var(--s5); left: var(--s5); border-right: 0; border-top: 0; }
+  .gl-leader__corner--br { bottom: var(--s5); right: var(--s5); border-left: 0; border-top: 0; }
+  .gl-leader__tc {
+    position: absolute;
+    top: var(--s5);
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-label);
+    letter-spacing: var(--tr-mega);
+    color: var(--ink-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .gl-leader__skip {
+    position: absolute;
+    right: calc(var(--s5) + 44px);
+    bottom: var(--s5);
+    padding: 0.6em 1em;
+    border: 1.5px solid var(--ink-faint);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-label);
+    letter-spacing: var(--tr-wide);
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .gl-leader__skip:hover {
+    border-color: var(--ink);
+  }
+
+  /* ---- Not-found and content page framing -------------------------------------------- */
+  .gl-page {
+    padding-top: var(--s7);
+    padding-bottom: var(--s7);
+  }
+  .gl-section + .gl-section {
+    margin-top: var(--s9);
+  }
+  .gl-section__body {
+    margin-top: var(--s6);
+  }
+
+  /* Call-sheet style table for structured info (attribute guide). */
+  .gl-sheet {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1.5px solid var(--ink);
+    font-size: var(--t-small);
+  }
+  .gl-sheet caption {
+    caption-side: top;
+    text-align: left;
+    padding-bottom: var(--s3);
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-label);
+    letter-spacing: var(--tr-wide);
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .gl-sheet th,
+  .gl-sheet td {
+    padding: 0.7em 0.8em;
+    border: 1px solid var(--rule);
+    vertical-align: top;
+    text-align: left;
+  }
+  .gl-sheet thead th {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: var(--t-label);
+    letter-spacing: var(--tr-wide);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .gl-sheet tbody th {
+    font-family: var(--f-mono);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .gl-sheet__scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
