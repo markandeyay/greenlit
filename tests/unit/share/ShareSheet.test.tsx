@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '@/components/ui';
 import { ShareSheet } from '@/components/share';
 import { buildShareBody, buildShareText, shareUrl } from '@/components/share/shareText';
-import { shareImagePath } from '@/components/share/shareGrid';
+import { artifactImageUrl } from '@/components/share/artifactCodec';
+import { classicArtifact } from '@/components/share/classicArtifact';
 import { canUseNativeShare, copyText, xIntentUrl } from '@/components/share/shareActions';
 import { SECRET_FILM_ID, SECRET_TITLE, specExample } from './fixtures';
 
@@ -41,9 +42,11 @@ afterEach(() => {
 });
 
 describe('ShareSheet', () => {
-  it('shows the exact share text as a preview and no answer data', () => {
+  it('shows the card and the exact share text as a preview, and no answer data', () => {
     const { container } = setup();
     expect(screen.getByTestId('share-preview').textContent).toBe(buildShareText(input));
+    expect(screen.getByTestId('share-card-image').getAttribute('src')).toBe(artifactImageUrl(classicArtifact(input), 'portrait'));
+    expect(container.querySelector('[data-share-sheet]')).not.toBeNull();
     expect(container.innerHTML).not.toContain(SECRET_TITLE);
     expect(container.innerHTML).not.toContain(String(SECRET_FILM_ID));
   });
@@ -51,7 +54,8 @@ describe('ShareSheet', () => {
   it('has clearly labelled controls', () => {
     setup();
     expect(screen.getByRole('region', { name: 'Post your take' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Post your take' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Card' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('button', { name: 'Download image' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Copy text' })).toBeInTheDocument();
     const x = screen.getByRole('link', { name: /Post to X/ });
@@ -64,7 +68,7 @@ describe('ShareSheet', () => {
   it('copies to the clipboard on desktop and toasts "Copied"', async () => {
     setup();
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Post your take' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Share' }));
     });
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(buildShareText(input));
     expect(await screen.findByText('Copied')).toBeInTheDocument();
@@ -76,7 +80,7 @@ describe('ShareSheet', () => {
     nav.share = share;
     setup();
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Post your take' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Share' }));
     });
     expect(share).toHaveBeenCalledWith({ text: buildShareBody(input), url: shareUrl(input) });
     expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
@@ -87,7 +91,7 @@ describe('ShareSheet', () => {
     nav.share = vi.fn().mockRejectedValue(Object.assign(new Error('cancel'), { name: 'AbortError' }));
     setup();
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Post your take' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Share' }));
     });
     expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
   });
@@ -97,7 +101,7 @@ describe('ShareSheet', () => {
     nav.share = vi.fn().mockRejectedValue(new TypeError('nope'));
     setup();
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Post your take' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Share' }));
     });
     expect(navigator.clipboard.writeText).toHaveBeenCalled();
   });
@@ -113,7 +117,7 @@ describe('ShareSheet', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Download image' }));
     });
     await waitFor(() => expect(click).toHaveBeenCalled());
-    expect(fetchMock).toHaveBeenCalledWith(shareImagePath(input));
+    expect(fetchMock).toHaveBeenCalledWith(artifactImageUrl(classicArtifact(input), 'portrait'));
     const anchor = click.mock.instances[0] as unknown as HTMLAnchorElement;
     expect(anchor.download).toMatch(/reel-212\.png$/);
     vi.unstubAllGlobals();

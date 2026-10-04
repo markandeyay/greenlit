@@ -44,4 +44,6 @@ export interface ShareArtifactPanelProps {
   className?: string;
   /** Optional heading above the card, e.g. "Post your take". */
   heading?: string;
+  /** Optional longer screen reader description of the result (e.g. take by take verdicts). */
+  description?: string;
 }

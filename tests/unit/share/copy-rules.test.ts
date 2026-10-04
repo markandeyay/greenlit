@@ -15,12 +15,15 @@ const walk = (dir: string): string[] =>
 const FILES = [
   ...walk('src/components/share'),
   ...walk('src/app/api/og'),
+  ...walk('src/app/api/share'),
   'src/app/opengraph-image.tsx',
   'src/app/twitter-image.tsx',
   'src/app/vault/[number]/opengraph-image.tsx',
   'src/app/p/[slug]/opengraph-image.tsx',
 ];
 const read = (f: string) => readFileSync(join(root, f), 'utf8');
+/** Code only: drops // line comments and JSDoc / block comment lines. */
+const code = (f: string) => read(f).replace(/^\s*(\/\/|\/\*|\*).*$/gm, '');
 
 describe('copy rules (WS6 files)', () => {
   it('finds the files', () => {
@@ -36,12 +39,12 @@ describe('copy rules (WS6 files)', () => {
   });
 
   it('never hardcodes the take limit', () => {
-    expect(FILES.filter((f) => /\/10\b|maxGuesses:\s*10/.test(read(f).replace(/^\s*\/\/.*$/gm, '')))).toEqual([]);
+    expect(FILES.filter((f) => /\/10\b|maxGuesses:\s*10/.test(code(f)))).toEqual([]);
   });
 
   it('never reads answer-identifying fields', () => {
     const forbidden = /\.(title|filmId|posterPath|personIds|personId)\b|\.name\b(?!\s*===)/;
-    const offenders = FILES.filter((f) => !f.endsWith('.png') && forbidden.test(read(f).replace(/^\s*\/\/.*$/gm, '')));
+    const offenders = FILES.filter((f) => !f.endsWith('.png') && forbidden.test(code(f)));
     expect(offenders).toEqual([]);
   });
 });
