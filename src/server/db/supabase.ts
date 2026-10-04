@@ -33,6 +33,9 @@ import fixtureLibrary from './fixtures/library.json';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Row = Record<string, any>;
 
+/** Escape LIKE wildcards so ilike performs an exact, case-insensitive match. */
+const escapeLike = (s: string) => s.replace(/[\\%_]/g, (m) => `\\${m}`);
+
 function check<T>(res: { data: T; error: { message: string } | null }): T {
   if (res.error) throw new Error(`supabase: ${res.error.message}`);
   return res.data;
@@ -399,7 +402,7 @@ export class SupabaseRepo implements Repo {
     return r ? profileFromRow(r) : null;
   }
   async getProfileByHandle(handle: string) {
-    const r = check(await this.db.from('profiles').select('*').ilike('handle', handle).maybeSingle());
+    const r = check(await this.db.from('profiles').select('*').ilike('handle', escapeLike(handle)).limit(1).maybeSingle());
     return r ? profileFromRow(r) : null;
   }
   async listProfiles(ids: string[]) {
