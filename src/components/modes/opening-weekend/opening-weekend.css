@@ -1,0 +1,30 @@
+/* Opening Weekend motion (WS9). Tokens only. All of it is switched off under reduced motion
+   (the global rule in src/styles/globals.css, plus the explicit guards below). */
+@keyframes ow-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes ow-card-out {
+  to {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.97);
+  }
+}
+.ow-card-in {
+  animation: ow-card-in var(--d2) var(--e-out) both;
+}
+.ow-card-out {
+  animation: ow-card-out var(--d1) var(--e-soft) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-reduced-motion="off"]) .ow-card-in,
+  html:not([data-reduced-motion="off"]) .ow-card-out {
+    animation: none;
+  }
+}
+html[data-reduced-motion="on"] .ow-card-in,
+html[data-reduced-motion="on"] .ow-card-out {
+  animation: none;
+}
