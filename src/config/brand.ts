@@ -5,7 +5,11 @@ export const APP_NAME = 'Greenlit';
 export const APP_TAGLINE = 'The daily movie deduction game';
 
 /** Canonical site URL, used for share links and OG metadata. */
-export const SITE_URL: string = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+export const SITE_URL: string =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`
+    : 'http://localhost:3000');
 
 /** Host shown in share text, e.g. "greenlit.example/212". */
 export function shareHost(): string {

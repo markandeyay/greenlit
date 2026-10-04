@@ -10,6 +10,7 @@ import { Accent } from '@/components/ui/Heading';
 import { GameBoard } from '@/components/game/GameBoard';
 import { playerRegion } from '@/lib/game/server-region';
 import { getToday } from '@/server/puzzles';
+import { initialPlayFor } from '@/server/engine/initial-play';
 import type { TodayResponse } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -44,7 +45,7 @@ export default async function TodayPage() {
     );
   }
 
-  const region = await playerRegion();
+  const [region, initialPlay] = await Promise.all([playerRegion(), initialPlayFor('daily', String(today.number))]);
   return (
     <main className="l-page pt-5 pb-16 sm:pt-8">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -63,6 +64,7 @@ export default async function TodayPage() {
         kicker="Today's reel · Name the film"
         title={COPY.reelLabel(today.number)}
         playerRegion={region}
+        initialPlay={initialPlay}
       />
     </main>
   );

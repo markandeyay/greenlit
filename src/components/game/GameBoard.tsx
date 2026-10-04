@@ -11,7 +11,7 @@ import { useToast } from '@/components/ui/Toast';
 import { useGame } from '@/lib/game/useGame';
 import { describeTake } from '@/lib/game/state';
 import { pad2 } from '@/lib/format';
-import type { HintSlot, HintType, PlayKind, RegionCode, SearchResult } from '@/lib/types';
+import type { HintSlot, HintType, PlayKind, PlayStateResponse, RegionCode, SearchResult } from '@/lib/types';
 import { GiveUp } from './GiveUp';
 import { GuessRow, PendingRow } from './GuessRow';
 import { ResultCard } from './ResultCard';
@@ -33,6 +33,8 @@ export interface GameBoardProps {
   playerRegion?: RegionCode;
   /** Optional block under the slate (e.g. the pitch intro). */
   intro?: ReactNode;
+  /** Server-rendered play state (no answer unless the play is finished). */
+  initialPlay?: PlayStateResponse | null;
 }
 
 /**
@@ -40,10 +42,10 @@ export interface GameBoardProps {
  * left; the sticky Call Sheet on the right (>= 1024px) or as a strip under the search (mobile).
  * State comes from the API only; the answer is known only once the server sends the reveal.
  */
-export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, title, playerRegion, intro }: GameBoardProps) {
+export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, title, playerRegion, intro, initialPlay }: GameBoardProps) {
   const { toast } = useToast();
   const onError = useCallback((m: string) => toast(m), [toast]);
-  const { state, target, guess, giveUp, revealHint, reload } = useGame({ kind, gameRef, onError });
+  const { state, target, guess, giveUp, revealHint, reload } = useGame({ kind, gameRef, onError, initialPlay });
   const searchRef = useRef<HTMLInputElement | null>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement | null>(null);
   const autoFocused = useRef(false);

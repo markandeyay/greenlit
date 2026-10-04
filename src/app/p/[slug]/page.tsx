@@ -8,6 +8,7 @@ import { RULES } from '@/config/rules';
 import { Breadcrumb } from '@/components/chrome/Breadcrumb';
 import { Accent } from '@/components/ui/Heading';
 import { GameBoard } from '@/components/game/GameBoard';
+import { initialPlayFor } from '@/server/engine/initial-play';
 import { playerRegion } from '@/lib/game/server-region';
 import { getRepo } from '@/server/db';
 
@@ -29,7 +30,7 @@ export default async function PitchPlayPage({ params }: { params: Promise<{ slug
     exists = false;
   }
   if (!exists) notFound();
-  const region = await playerRegion();
+  const [region, initialPlay] = await Promise.all([playerRegion(), initialPlayFor('pitch', slug)]);
   return (
     <main className="l-page pt-5 pb-16 sm:pt-8">
       <div className="mb-4">
@@ -37,6 +38,7 @@ export default async function PitchPlayPage({ params }: { params: Promise<{ slug
       </div>
       <GameBoard
         kind="pitch"
+        initialPlay={initialPlay}
         gameRef={slug}
         reelNumber={null}
         date={null}

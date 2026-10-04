@@ -3,7 +3,7 @@
 // local record when the round finishes.
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { recordLocalPlay } from '@/lib/local-stats';
-import type { HintSlot, HintType, PlayKind, SearchResult } from '@/lib/types';
+import type { HintSlot, HintType, PlayKind, PlayStateResponse, SearchResult } from '@/lib/types';
 import { GameApiError, friendlyError, gameApi, type GameApi, type Target } from './api';
 import { gameReducer, initialGameState, isFinished, localRecordFor } from './state';
 
@@ -13,10 +13,15 @@ export interface UseGameOptions {
   api?: GameApi;
   /** Called with friendly copy when something fails. */
   onError?: (message: string) => void;
+  /** Server-rendered play state for the first paint (skips the initial fetch). */
+  initialPlay?: PlayStateResponse | null;
 }
 
-export function useGame({ kind, gameRef, api = gameApi, onError }: UseGameOptions) {
-  const [state, dispatch] = useReducer(gameReducer, initialGameState);
+export function useGame({ kind, gameRef, api = gameApi, onError, initialPlay }: UseGameOptions) {
+  const [state, dispatch] = useReducer(gameReducer, initialPlay ?? null, (play) =>
+    play ? gameReducer(initialGameState, { type: 'resumed', play }) : initialGameState,
+  );
+  const hasInitial = useRef(Boolean(initialPlay));
   const target: Target = useMemo(() => ({ kind, ref: gameRef }), [kind, gameRef]);
   const recorded = useRef(false);
   const inFlight = useRef(false);
@@ -42,6 +47,10 @@ export function useGame({ kind, gameRef, api = gameApi, onError }: UseGameOption
   }, [api, target]);
 
   useEffect(() => {
+    if (hasInitial.current) {
+      hasInitial.current = false;
+      return;
+    }
     void load();
   }, [load]);
 
