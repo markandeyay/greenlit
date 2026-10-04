@@ -11,7 +11,7 @@ import type {
   GuessResponse,
   HintSlot,
   LocalPlayRecord,
-  PlayKind,
+  ClassicKind,
   PlayStateResponse,
   PlayStatus,
   Reveal,
@@ -130,7 +130,7 @@ export const isFinished = (s: Pick<GameState, 'status'>) => s.status !== 'in_pro
 
 /** The record stored on this device when a round finishes, or null while in progress. */
 export function localRecordFor(
-  kind: PlayKind,
+  kind: ClassicKind,
   ref: string,
   s: Pick<GameState, 'status' | 'feedback' | 'hints'>,
   now: Date = new Date(),
@@ -147,13 +147,13 @@ export function localRecordFor(
 }
 
 /** Take after which a Script Note slot unlocks for this kind, or null when the slot never exists. */
-export function noteThreshold(kind: PlayKind, slot: HintSlot): number | null {
+export function noteThreshold(kind: ClassicKind, slot: HintSlot): number | null {
   if (kind === 'pitch') return slot === 1 ? PITCH.noteUnlockAfter : null;
   return RULES.hintUnlockAfter[slot - 1] ?? null;
 }
 
 /** Number of note slots a kind offers. */
-export function noteSlots(kind: PlayKind): HintSlot[] {
+export function noteSlots(kind: ClassicKind): HintSlot[] {
   return kind === 'pitch' ? [1] : [1, 2];
 }
 

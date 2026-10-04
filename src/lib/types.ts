@@ -98,8 +98,11 @@ export interface UsedHint {
 // Plays
 // ---------------------------------------------------------------------------
 
-/** Phase 1 kinds. Extra modes (Phase 2+) extend this union. */
-export type PlayKind = 'daily' | 'vault' | 'pitch';
+/** Kinds played with the classic attribute engine (Section 4). 'unlimited' is Phase 2 practice. */
+export type ClassicKind = 'daily' | 'vault' | 'pitch' | 'unlimited';
+/** Extra modes with their own engines (Section 5, WS9). Stored in plays with kind = mode id. */
+export type ModeKind = 'opening_weekend' | 'release_order' | 'casting_call' | 'logline';
+export type PlayKind = ClassicKind | ModeKind;
 export type PlayStatus = 'in_progress' | 'won' | 'lost';
 
 // ---------------------------------------------------------------------------

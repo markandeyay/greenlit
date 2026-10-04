@@ -3,12 +3,12 @@
 // local record when the round finishes.
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { recordLocalPlay } from '@/lib/local-stats';
-import type { HintSlot, HintType, PlayKind, PlayStateResponse, SearchResult } from '@/lib/types';
+import type { HintSlot, HintType, ClassicKind, PlayStateResponse, SearchResult } from '@/lib/types';
 import { GameApiError, friendlyError, gameApi, type GameApi, type Target } from './api';
 import { gameReducer, initialGameState, isFinished, localRecordFor } from './state';
 
 export interface UseGameOptions {
-  kind: PlayKind;
+  kind: ClassicKind;
   gameRef: string;
   api?: GameApi;
   /** Called with friendly copy when something fails. */

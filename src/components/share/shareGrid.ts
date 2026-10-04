@@ -2,7 +2,7 @@
 // the /api/og/result route. A grid is ONLY verdicts: never a title, film id, poster or any answer
 // attribute (Section 10).
 import { RULES } from '@/config/rules';
-import type { GuessFeedback, PlayKind } from '@/lib/types';
+import type { ClassicKind, GuessFeedback } from '@/lib/types';
 import type { ShareInput } from './types';
 
 /** One share square. 'na' verdicts collapse to 'miss' (rendered as a black square). */
@@ -26,7 +26,7 @@ export const SHARE_COLUMNS = [
 export const CELLS_PER_ROW = SHARE_COLUMNS.length;
 
 export interface ShareGrid {
-  kind: PlayKind;
+  kind: ClassicKind;
   /** Reel number for daily and vault plays, null for pitches. */
   reelNumber: number | null;
   /** Oldest first. */
@@ -77,8 +77,8 @@ export function gridFromInput(input: ShareInput): ShareGrid {
 
 const CELL_CODE: Record<ShareCell, string> = { match: 'g', close: 'y', miss: 'b' };
 const CODE_CELL: Record<string, ShareCell> = { g: 'match', y: 'close', b: 'miss' };
-const KIND_CODE: Record<PlayKind, string> = { daily: 'd', vault: 'v', pitch: 'p' };
-const CODE_KIND: Record<string, PlayKind> = { d: 'daily', v: 'vault', p: 'pitch' };
+const KIND_CODE: Record<ClassicKind, string> = { daily: 'd', vault: 'v', pitch: 'p', unlimited: 'u' };
+const CODE_KIND: Record<string, ClassicKind> = { d: 'daily', v: 'vault', p: 'pitch', u: 'unlimited' };
 
 const ALLOWED_KEYS = new Set(['k', 'n', 't', 's', 'h', 'g']);
 /** Longest legal `g`: maxGuesses rows of 8 cells plus separators. */

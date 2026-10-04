@@ -10,13 +10,13 @@ import { cx } from '@/components/ui/cx';
 import { gameApi } from '@/lib/game/api';
 import { beatPercent, bucketFor, withSelf } from '@/lib/game/stats';
 import { pad2, percent, plural } from '@/lib/format';
-import type { DailyStatsResponse, GuessFeedback, PlayKind, Reveal } from '@/lib/types';
+import type { DailyStatsResponse, GuessFeedback, ClassicKind, Reveal } from '@/lib/types';
 import { DistributionChart } from './DistributionChart';
 import { Poster } from './Poster';
 import { TrailerEmbed } from './TrailerEmbed';
 
 export interface ResultCardProps {
-  kind: PlayKind;
+  kind: ClassicKind;
   gameRef: string;
   reelNumber: number | null;
   status: 'won' | 'lost';

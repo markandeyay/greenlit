@@ -11,7 +11,7 @@ import { useToast } from '@/components/ui/Toast';
 import { useGame } from '@/lib/game/useGame';
 import { describeTake } from '@/lib/game/state';
 import { pad2 } from '@/lib/format';
-import type { HintSlot, HintType, PlayKind, PlayStateResponse, RegionCode, SearchResult } from '@/lib/types';
+import type { HintSlot, HintType, ClassicKind, PlayStateResponse, RegionCode, SearchResult } from '@/lib/types';
 import { GiveUp } from './GiveUp';
 import { GuessRow, PendingRow } from './GuessRow';
 import { ResultCard } from './ResultCard';
@@ -20,7 +20,7 @@ import { SearchBox } from './SearchBox';
 import { Slate } from './Slate';
 
 export interface GameBoardProps {
-  kind: PlayKind;
+  kind: ClassicKind;
   /** Puzzle number as a string, or the pitch slug. */
   gameRef: string;
   reelNumber: number | null;

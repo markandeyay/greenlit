@@ -11,7 +11,7 @@ import type {
   HintResponse,
   HintSlot,
   HintType,
-  PlayKind,
+  ClassicKind,
   PlayStateResponse,
   SearchResponse,
   TodayResponse,
@@ -31,7 +31,7 @@ export class GameApiError extends Error {
 }
 
 export interface Target {
-  kind: PlayKind;
+  kind: ClassicKind;
   ref: string;
 }
 
