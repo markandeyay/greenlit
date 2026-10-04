@@ -5,10 +5,13 @@
 // - 'vault': any released past puzzle, 1 <= number < today. Never today, never the future,
 //   never pre-launch.
 // - 'pitch': repo.getPitch(slug).
+// - 'unlimited': an opaque encrypted reel ref (src/server/modes/unlimited.ts). The ref is
+//   decrypted and the film must still be answer-eligible; failures are a generic not_found.
 // Refs for daily/vault are canonicalized ("007" -> "7") so one puzzle maps to one play row.
 import 'server-only';
 import { getRepo } from '@/server/db';
 import { ApiFailure } from '@/server/http';
+import { resolveUnlimitedTarget } from '@/server/modes/unlimited';
 import { addDays, dateInResetZone, nextResetAt, puzzleNumberForDate } from '@/lib/dates';
 import type { Hint, PlayKind, PublicPuzzle, TodayResponse } from '@/lib/types';
 
@@ -17,7 +20,7 @@ export interface ResolvedTarget {
   /** Canonical ref used as the play key. */
   ref: string;
   answerFilmId: number;
-  /** Daily/vault puzzle number, null for pitches. */
+  /** Daily/vault puzzle number, null for pitches and unlimited reels. */
   puzzleNumber: number | null;
   /** Hint candidates (daily/vault) or a creator_note hint (pitch, when a note exists). */
   hints: Hint[];
@@ -41,6 +44,8 @@ export function todayInfo(now: Date = new Date()): { number: number; date: strin
 export async function resolveTarget(kind: PlayKind, ref: string, now: Date = new Date()): Promise<ResolvedTarget> {
   const repo = getRepo();
   const today = todayInfo(now);
+
+  if (kind === 'unlimited') return resolveUnlimitedTarget(ref);
 
   if (kind === 'pitch') {
     if (!SLUG_RE.test(ref)) throw new ApiFailure('not_found', 'Challenge not found.');

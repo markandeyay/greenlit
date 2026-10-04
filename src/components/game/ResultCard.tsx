@@ -4,7 +4,7 @@ import { useEffect, useId, useState, type Ref } from 'react';
 import { COPY } from '@/config/brand';
 import { RULES } from '@/config/rules';
 import { ShareSheet } from '@/components/share';
-import { ButtonLink } from '@/components/ui/Button';
+import { Button, ButtonLink } from '@/components/ui/Button';
 import { Tag } from '@/components/ui/Tag';
 import { cx } from '@/components/ui/cx';
 import { gameApi } from '@/lib/game/api';
@@ -27,6 +27,8 @@ export interface ResultCardProps {
   live?: boolean;
   headingRef?: Ref<HTMLHeadingElement>;
   loadStats?: (n: number) => Promise<DailyStatsResponse>;
+  /** Unlimited (Dailies Reel): deal the next reel. */
+  onNextReel?: () => void;
 }
 
 /** Headline under the stamp. */
@@ -52,6 +54,7 @@ export function ResultCard({
   live = false,
   headingRef,
   loadStats = gameApi.dailyStats,
+  onNextReel,
 }: ResultCardProps) {
   const headingId = useId();
   const takes = feedback.length;
@@ -111,7 +114,16 @@ export function ResultCard({
           <p className="mt-4 font-mono text-[12px] text-ink-dim">Vault reels are for the love of it: no leaderboard credit.</p>
         ) : null}
 
+        {kind === 'unlimited' ? (
+          <p className="mt-4 font-mono text-[12px] text-ink-dim">Dailies reels are practice: no streaks, no leaderboard.</p>
+        ) : null}
+
         <nav aria-label="What next" className="mt-5 flex flex-wrap gap-3">
+          {onNextReel ? (
+            <Button variant="solid" size="sm" onClick={onNextReel}>
+              Next reel
+            </Button>
+          ) : null}
           {kind !== 'daily' ? (
             <ButtonLink href="/" variant="outline" size="sm">
               Today&apos;s reel
@@ -139,7 +151,7 @@ function RevealBlock({ reveal, won }: { reveal: Reveal; won: boolean }) {
           posterPath={reveal.posterPath}
           size="lg"
           alt={`Poster for ${reveal.title}`}
-          className="shadow-[0_18px_50px_rgba(0,0,0,0.6)]"
+          className="shadow-[var(--shadow-lg)]"
         />
       </div>
       <div className="min-w-0">

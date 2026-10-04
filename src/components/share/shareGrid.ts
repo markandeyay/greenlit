@@ -58,7 +58,7 @@ export function feedbackToCells(fb: GuessFeedback): ShareCell[] {
 export function gridFromInput(input: ShareInput): ShareGrid {
   return {
     kind: input.kind,
-    reelNumber: input.kind === 'pitch' ? null : input.reelNumber,
+    reelNumber: input.kind === 'pitch' || input.kind === 'unlimited' ? null : input.reelNumber,
     rows: input.feedback.map(feedbackToCells),
     status: input.status,
     hintsUsed: input.hintsUsed > 0,
@@ -67,8 +67,8 @@ export function gridFromInput(input: ShareInput): ShareGrid {
 
 // ---------------------------------------------------------------------------
 // Query encoding for /api/og/result
-//   k = d | v | p           kind (daily, vault, pitch)
-//   n = reel number         daily and vault only, absent for pitches
+//   k = d | v | p | u       kind (daily, vault, pitch, unlimited)
+//   n = reel number         daily and vault only, absent for pitches and unlimited
 //   t = takes               0..RULES.maxGuesses, equals the number of rows
 //   s = won | lost
 //   h = 0 | 1               Script Notes used
@@ -89,7 +89,7 @@ const MAX_REEL_DIGITS = 6;
 export function encodeGrid(grid: ShareGrid): string {
   const params = new URLSearchParams();
   params.set('k', KIND_CODE[grid.kind]);
-  if (grid.kind !== 'pitch' && grid.reelNumber !== null) params.set('n', String(grid.reelNumber));
+  if (grid.kind !== 'pitch' && grid.kind !== 'unlimited' && grid.reelNumber !== null) params.set('n', String(grid.reelNumber));
   params.set('t', String(grid.rows.length));
   params.set('s', grid.status);
   params.set('h', grid.hintsUsed ? '1' : '0');
@@ -125,12 +125,12 @@ export function decodeShareGrid(params: URLSearchParams): DecodeResult {
   }
 
   const kind = CODE_KIND[params.get('k') ?? ''];
-  if (!kind) return fail('k must be d, v or p');
+  if (!kind) return fail('k must be d, v, p or u');
 
   const n = params.get('n');
   let reelNumber: number | null = null;
-  if (kind === 'pitch') {
-    if (n !== null) return fail('n is not allowed for pitches');
+  if (kind === 'pitch' || kind === 'unlimited') {
+    if (n !== null) return fail(`n is not allowed for ${kind === 'pitch' ? 'pitches' : 'unlimited reels'}`);
   } else {
     if (n === null || !new RegExp(`^[1-9][0-9]{0,${MAX_REEL_DIGITS - 1}}$`).test(n)) {
       return fail('n must be a positive reel number');

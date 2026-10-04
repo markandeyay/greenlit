@@ -28,9 +28,14 @@ export function readPlayCookie(request: Request): Play[] {
   }
 }
 
-/** Newest first, one entry per kind+ref, capped. */
+const MAX_PRACTICE = 1; // unlimited reels are disposable; never let them evict a daily
+
+/** Newest first, one entry per kind+ref, capped. Practice reels never push out other plays. */
 export function upsertCookiePlay(plays: Play[], play: Play): Play[] {
-  return [play, ...plays.filter((p) => !(p.kind === play.kind && p.ref === play.ref))].slice(0, MAX_PLAYS);
+  const all = [play, ...plays.filter((p) => !(p.kind === play.kind && p.ref === play.ref))];
+  const practice = all.filter((p) => p.kind === 'unlimited').slice(0, MAX_PRACTICE);
+  const rest = all.filter((p) => p.kind !== 'unlimited').slice(0, MAX_PLAYS - practice.length);
+  return all.filter((p) => practice.includes(p) || rest.includes(p));
 }
 
 export function playCookieHeader(plays: Play[]): string {

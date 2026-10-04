@@ -66,3 +66,15 @@ describe('keyless mode', () => {
     expect(await b.getPitch(stored.slug.slice(0, -2) + 'xx')).toBeNull();
   });
 });
+
+describe('play cookie retention', () => {
+  it('keeps the daily when many practice reels are played', async () => {
+    const { upsertCookiePlay } = await import('@/server/engine/play-cookie');
+    const base = { profileId: null, anonId: 'a', guesses: [], hintsUsed: [], status: 'in_progress' as const, takes: null, startedAt: '', firstGuessAt: null, finishedAt: null };
+    let plays = upsertCookiePlay([], { ...base, id: 'd', kind: 'daily', ref: '4' });
+    for (let i = 0; i < 8; i++) plays = upsertCookiePlay(plays, { ...base, id: `u${i}`, kind: 'unlimited', ref: `r${i}` });
+    expect(plays.some((p) => p.kind === 'daily')).toBe(true);
+    expect(plays.filter((p) => p.kind === 'unlimited')).toHaveLength(1);
+    expect(plays[0]!.ref).toBe('r7');
+  });
+});

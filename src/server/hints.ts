@@ -9,6 +9,8 @@
 //   ([slot1] or [slot1, slot2]). At take 8+ a player who skipped Note 1 simply takes both.
 // - Pitches: slot 1 offers ['creator_note'] once takes >= PITCH.noteUnlockAfter and the pitch
 //   has a note. Slot 2 offers nothing.
+// - Unlimited reels (WS9) follow the daily rules exactly: two notes at the same takes, picked from
+//   candidates drafted by generateHints over the active library (src/server/modes/unlimited.ts).
 // - New hints are only granted while the play is in progress. Re-requesting a hint already used
 //   in that slot (same type) returns its content any time, so a resumed or finished play can
 //   redisplay it.

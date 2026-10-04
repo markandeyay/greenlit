@@ -35,6 +35,8 @@ export interface GameBoardProps {
   intro?: ReactNode;
   /** Server-rendered play state (no answer unless the play is finished). */
   initialPlay?: PlayStateResponse | null;
+  /** Unlimited (Dailies Reel): shows a "Next reel" action on the result card. */
+  onNextReel?: () => void;
 }
 
 /**
@@ -42,7 +44,7 @@ export interface GameBoardProps {
  * left; the sticky Call Sheet on the right (>= 1024px) or as a strip under the search (mobile).
  * State comes from the API only; the answer is known only once the server sends the reveal.
  */
-export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, title, playerRegion, intro, initialPlay }: GameBoardProps) {
+export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, title, playerRegion, intro, initialPlay, onNextReel }: GameBoardProps) {
   const { toast } = useToast();
   const onError = useCallback((m: string) => toast(m), [toast]);
   const { state, target, guess, giveUp, revealHint, reload } = useGame({ kind, gameRef, onError, initialPlay });
@@ -147,6 +149,7 @@ export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, titl
               reveal={state.reveal}
               live={state.finishedLive}
               headingRef={resultHeadingRef}
+              onNextReel={onNextReel}
             />
           </div>
         ) : (

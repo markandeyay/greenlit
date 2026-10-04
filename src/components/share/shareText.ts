@@ -12,6 +12,8 @@
 //   `🔴 SENT TO TURNAROUND` follows the rows, before the link.
 // - Vault plays use the same header (`Reel n`) and link to `/vault/n`.
 // - Pitches have no reel: header `<APP> · Pitch · Take ...`, link `/p/<slug>` (the slug is opaque).
+// - Unlimited (Dailies Reel, WS9) has no reel either: header `<APP> · Dailies Reel · Take ...`,
+//   link `/modes/unlimited`. The opaque reel ref is never put in the share text.
 import { APP_NAME, COPY, SITE_URL, shareHost } from '@/config/brand';
 import { RULES } from '@/config/rules';
 import { gridFromInput, SHARE_COLUMNS, type ShareCell, type ShareGrid } from './shareGrid';
@@ -26,8 +28,12 @@ export function takeLabel(grid: Pick<ShareGrid, 'rows' | 'status'>): string {
   return `Take ${take}/${RULES.maxGuesses}`;
 }
 
-/** "Reel 212", or "Pitch" for custom challenges. */
+export const UNLIMITED_SHARE_LABEL = 'Dailies Reel';
+export const UNLIMITED_SHARE_PATH = '/modes/unlimited';
+
+/** "Reel 212", "Dailies Reel" for unlimited, or "Pitch" for custom challenges. */
 export function reelLabel(grid: Pick<ShareGrid, 'kind' | 'reelNumber'>): string {
+  if (grid.kind === 'unlimited') return UNLIMITED_SHARE_LABEL;
   return grid.kind === 'pitch' || grid.reelNumber === null ? 'Pitch' : `Reel ${grid.reelNumber}`;
 }
 
@@ -36,8 +42,9 @@ export function shareHeader(grid: ShareGrid): string {
   return grid.hintsUsed ? `${head} ${ROW_MARK.notes}` : head;
 }
 
-/** Path of the shared puzzle: `/212` for dailies, `/vault/212`, `/p/<slug>`. */
+/** Path of the shared puzzle: `/212` for dailies, `/vault/212`, `/p/<slug>`, `/modes/unlimited`. */
 export function sharePath(input: Pick<ShareInput, 'kind' | 'ref' | 'reelNumber'>): string {
+  if (input.kind === 'unlimited') return UNLIMITED_SHARE_PATH;
   if (input.kind === 'pitch') return `/p/${encodeURIComponent(input.ref)}`;
   const n = input.reelNumber ?? input.ref;
   return input.kind === 'vault' ? `/vault/${n}` : `/${n}`;
