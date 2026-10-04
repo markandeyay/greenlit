@@ -31,6 +31,8 @@ begin
     perform pg_temp.expect_denied('select * from public.pitches', r || ' pitches.*');
     perform pg_temp.expect_denied('select * from public.plays', r || ' plays');
     perform pg_temp.expect_denied('select * from public.film_awards', r || ' film_awards');
+    perform pg_temp.expect_denied('select public.record_daily_result(1, 3)', r || ' record_daily_result');
+    perform pg_temp.expect_denied('select public.sync_studios_seq()', r || ' sync_studios_seq');
     perform pg_temp.expect_denied('update public.puzzles set theme = ''x''', r || ' puzzles update');
     perform pg_temp.expect_denied('insert into public.films (id,title,release_year,director_unit,genre_ids) values (1,''x'',2000,''{"ids":[1],"display":"x"}'',''{1}'')', r || ' films insert');
     select count(*) into n from public.puzzles where true;
@@ -41,5 +43,9 @@ begin
     if n <> 1 then raise exception 'films not readable by %', r; end if;
     reset role;
   end loop;
+  perform public.record_daily_result(1, 3);
+  perform public.record_daily_result(1, null);
+  select distribution[3] + distribution[11] into n from public.daily_stats where puzzle_number = 1;
+  if n <> 2 then raise exception 'record_daily_result wrong (%)', n; end if;
   raise notice 'ALL RLS CHECKS PASSED';
 end $$;
