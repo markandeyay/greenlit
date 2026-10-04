@@ -26,3 +26,5 @@ export {
 } from './shareGrid';
 export type { ShareCell, ShareGrid, DecodeResult } from './shareGrid';
 export { copyText, canUseNativeShare, xIntentUrl } from './shareActions';
+export { ShareArtifactPanel } from './ShareArtifactPanel';
+export type { ShareArtifact, ShareArtifactPanelProps, ArtifactMode, ArtifactCell } from './artifact';
