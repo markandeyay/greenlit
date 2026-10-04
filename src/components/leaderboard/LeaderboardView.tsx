@@ -2,7 +2,7 @@
 // /leaderboard body: Weekly / All time / Streaks tabs, a "No notes" filter, and a ranked table
 // styled like a call sheet. The signed-in player's row is marked with a YOU tag and a rule.
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { COPY } from '@/config/brand';
 import { ButtonLink } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
@@ -42,9 +42,10 @@ function useBoard(period: LeaderboardPeriod, noNotes: boolean): Load & { retry: 
   return { ...load, retry: () => setAttempt((n) => n + 1) };
 }
 
-function Board({ period, noNotes, me, authConfigured }: {
+function Board({ period, noNotes, me, authConfigured, filter }: {
   period: LeaderboardPeriod;
   noNotes: boolean;
+  filter?: ReactNode;
   me: string | null;
   authConfigured: boolean;
 }) {
@@ -52,7 +53,8 @@ function Board({ period, noNotes, me, authConfigured }: {
 
   return (
     <div className="grid gap-4">
-      <p className="max-w-[var(--measure)] text-ink-dim">
+      {filter}
+      <p className="max-w-[var(--measure)] text-[15px] text-ink-dim">
         {periodBlurb(period)}
         {noNotes ? ` Only reels finished without ${COPY.hintsName} count.` : ''}
       </p>
@@ -131,8 +133,8 @@ function Board({ period, noNotes, me, authConfigured }: {
 
 function EmptyBoard({ period, authConfigured }: { period: LeaderboardPeriod; authConfigured: boolean }) {
   return (
-    <div className="grid justify-items-start gap-3 border border-dashed border-rule p-6">
-      <p className="ty-display text-[length:var(--t-d3)]">The credits are blank</p>
+    <div className="grid justify-items-start gap-3 rounded-[var(--radius-lg)] border border-dashed border-rule p-5">
+      <p className="gl-h2">The credits are blank</p>
       <p className="text-ink-dim">
         {!authConfigured
           ? 'Accounts open soon. Boards fill up once players can sign in, so for now your takes live in Stats.'
@@ -141,7 +143,7 @@ function EmptyBoard({ period, authConfigured }: { period: LeaderboardPeriod; aut
             : 'Nobody qualifies yet. Signed-in players appear here once they wrap enough daily reels.'}
       </p>
       <div className="flex flex-wrap gap-2">
-        <ButtonLink href="/" variant="slate">
+        <ButtonLink href="/" variant="solid">
           Play today&apos;s reel
         </ButtonLink>
         <ButtonLink href={authConfigured ? '/settings' : '/stats'} variant="outline">
@@ -160,12 +162,6 @@ export function LeaderboardView({ authConfigured }: { authConfigured: boolean })
 
   return (
     <div className="grid gap-6">
-      <Switch
-        checked={noNotes}
-        onChange={setNoNotes}
-        label="No notes"
-        description={`Only count reels finished without ${COPY.hintsName}.`}
-      />
       <Tabs
         label="Leaderboard period"
         value={period}
@@ -173,7 +169,22 @@ export function LeaderboardView({ authConfigured }: { authConfigured: boolean })
         tabs={(Object.keys(PERIOD_LABELS) as LeaderboardPeriod[]).map((p) => ({
           id: p,
           label: PERIOD_LABELS[p],
-          content: <Board period={p} noNotes={noNotes} me={myName} authConfigured={authConfigured} />,
+          content: (
+            <Board
+              period={p}
+              noNotes={noNotes}
+              me={myName}
+              authConfigured={authConfigured}
+              filter={
+                <Switch
+                  checked={noNotes}
+                  onChange={setNoNotes}
+                  label="No notes"
+                  description={`Only count reels finished without ${COPY.hintsName}.`}
+                />
+              }
+            />
+          ),
         }))}
       />
       {authConfigured && me.data && !me.data.user ? (

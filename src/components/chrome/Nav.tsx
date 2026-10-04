@@ -5,11 +5,9 @@ import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import { APP_NAME } from '@/config/brand';
 import { ButtonLink } from '@/components/ui/Button';
 import { IconLink } from '@/components/ui/IconButton';
-import { IconClose, IconHelp, IconMenu, IconSettings, IconStats } from '@/components/ui/icons';
-import { LeaderStrip } from './LeaderStrip';
+import { IconArrow, IconClose, IconHelp, IconMenu, IconSettings, IconStats } from '@/components/ui/icons';
 import { NAV_PITCH, NAV_PRIMARY, NAV_UTILITY, isActivePath } from './nav-items';
 import { RecDot } from './RecDot';
-import { ReelCode } from './ReelCode';
 import { TimecodeClock } from './TimecodeClock';
 
 const UTILITY_ICONS: Record<string, typeof IconHelp> = {
@@ -19,9 +17,10 @@ const UTILITY_ICONS: Record<string, typeof IconHelp> = {
 };
 
 /**
- * The top bar (Section 3), styled as one line of camera OSD like the SFA header: REC, the
- * wordmark, the reel list as edge print, the timecode countdown, utility icons, and the
- * slate-shaped Pitch button. Below 1024px the links move into an accessible disclosure menu.
+ * The top bar (Section 3), one slim 56px row: the wordmark, the primary routes (Today and Modes
+ * from tablet width, all four on desktop), the countdown to the next reel (desktop only), icon
+ * links for How to play, Stats and Settings at every width, and the slate Pitch button on
+ * desktop. Below 1024px the routes and the Pitch button live in a full-height menu sheet.
  */
 export function Nav() {
   const pathname = usePathname();
@@ -44,16 +43,7 @@ export function Nav() {
   };
 
   return (
-    <header className="gl-header" onKeyDown={onKeyDown}>
-      <LeaderStrip
-        kind="head"
-        right={
-          <>
-            <span className="gl-strip__hide-sm">Picture start · 24 fps · 2.39 : 1 ·</span>
-            <ReelCode />
-          </>
-        }
-      />
+    <header className="gl-header" data-menu-open={open || undefined} onKeyDown={onKeyDown}>
       <div className="gl-nav">
         <Link href="/" className="gl-nav__mark" aria-label={`${APP_NAME}, today's reel`}>
           <RecDot />
@@ -61,24 +51,21 @@ export function Nav() {
         </Link>
 
         <nav aria-label="Main" className="gl-nav__links">
-          {NAV_PRIMARY.map((item) => {
-            const active = isActivePath(pathname, item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="gl-nav__link"
-                aria-current={active ? 'page' : undefined}
-              >
-                <span className="gl-nav__tick" aria-hidden="true" />
-                {item.label}
-              </Link>
-            );
-          })}
+          {NAV_PRIMARY.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="gl-nav__link"
+              data-tier={item.tier}
+              aria-current={isActivePath(pathname, item.href) ? 'page' : undefined}
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
         <div className="gl-nav__meta">
-          <TimecodeClock className="gl-nav__tc" />
+          <TimecodeClock prefix="Next reel" className="gl-nav__tc" />
           <div className="gl-nav__icons">
             {NAV_UTILITY.map((item) => {
               const Icon = UTILITY_ICONS[item.href] ?? IconHelp;
@@ -105,7 +92,7 @@ export function Nav() {
           <button
             ref={burgerRef}
             type="button"
-            className="gl-icon-btn gl-icon-btn--outline gl-nav__burger"
+            className="gl-icon-btn gl-nav__burger"
             aria-expanded={open}
             aria-controls={menuId}
             aria-label={open ? 'Close menu' : 'Open menu'}
@@ -119,7 +106,7 @@ export function Nav() {
       <div id={menuId} className="gl-menu" hidden={!open}>
         <nav aria-label="Main menu">
           <ul className="gl-menu__list">
-            {NAV_PRIMARY.map((item, i) => (
+            {NAV_PRIMARY.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
@@ -127,35 +114,18 @@ export function Nav() {
                   aria-current={isActivePath(pathname, item.href) ? 'page' : undefined}
                   onClick={() => close(false)}
                 >
-                  <span className="gl-menu__n" aria-hidden="true">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-            {NAV_UTILITY.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="gl-menu__link gl-menu__link--sm"
-                  aria-current={isActivePath(pathname, item.href) ? 'page' : undefined}
-                  onClick={() => close(false)}
-                >
-                  <span className="gl-menu__n" aria-hidden="true">
-                    ▸
-                  </span>
-                  {item.label}
+                  <span>{item.label}</span>
+                  <IconArrow className="gl-menu__chev" />
                 </Link>
               </li>
             ))}
           </ul>
         </nav>
         <div className="gl-menu__foot">
-          <ButtonLink href={NAV_PITCH.href} variant="slate" onClick={() => close(false)}>
+          <ButtonLink href={NAV_PITCH.href} variant="slate" size="lg" block onClick={() => close(false)}>
             {NAV_PITCH.label}
           </ButtonLink>
-          {open ? <TimecodeClock /> : null}
+          {open ? <TimecodeClock prefix="Next reel in" className="gl-menu__tc" /> : null}
         </div>
       </div>
     </header>

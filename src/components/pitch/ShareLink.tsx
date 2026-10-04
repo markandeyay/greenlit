@@ -48,7 +48,7 @@ export function ShareLink({ url }: { url: string }) {
 
   return (
     <div>
-      <label htmlFor={id} className="ty-label mb-2 block text-ink-dim">
+      <label htmlFor={id} className="mb-2 block font-semibold">
         Challenge link
       </label>
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -58,7 +58,7 @@ export function ShareLink({ url }: { url: string }) {
           readOnly
           value={url}
           onFocus={(e) => e.currentTarget.select()}
-          className="min-w-0 flex-1 border border-ink bg-bg px-3 py-3 font-mono text-sm text-ink"
+          className="min-w-0 flex-1 rounded-[var(--radius)] border border-ink bg-bg px-3 py-3 font-mono text-sm text-ink"
         />
         <div className="flex gap-2">
           <Button variant="solid" onClick={copy}>

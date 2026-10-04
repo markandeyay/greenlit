@@ -64,8 +64,9 @@ Courier Prime at label size is always 700 (SFA rule). Numbers use `tabular-nums`
 - `Breadcrumb` edge print with chevrons: `APP ▸ 2026 ▸ 212A` (`reelCode(212)` gives `212A`).
 - `FilmMicrocopy` decorative `24 fps · 2.39 : 1`. `RecDot` the blinking REC light.
 - `LeaderStrip kind="head" | "tail"` perforated edge-print strips (top of page, footer).
-- `EndCredits` credit roll (role right, name left). `Footer` is THE END bracketed by tail leader with TMDB attribution.
-- `TimecodeClock` countdown to the next reset as `TC HH:MM:SS:FF` (24 fps); placeholder until mounted; `role="timer"` with a minute-level label.
+- `EndCredits` credit roll (role right, name left). `Footer` is slim: links, TMDB attribution, one privacy line (design brief v2). The End flourish lives on How to play only.
+- `PageHeader` the one compact title block for content pages (display h1 plus a one-line lede). Pages no longer render Breadcrumb, FilmMicrocopy, SlateMeta or scene headings at the top (design brief v2); those components stay exported.
+- `TimecodeClock` countdown to the next reset as `HH:MM:SS:FF` (24 fps), shown in the header only at >= 1024px and in the mobile menu sheet; placeholder until mounted; `role="timer"` with a minute-level label.
 - `Leader` Academy countdown 8 to 2, about 1.2s, first visit per New York day, skippable, aria-hidden, off under reduced motion. `replayLeader()` replays it.
 - `Grain` a faint, still paper-fiber texture (multiply) with a warm edge falloff, pointer-events none.
 

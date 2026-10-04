@@ -21,26 +21,13 @@ const ROWS: Array<{ what: string; why: string }> = [
 
 export function PrivacyNote() {
   return (
-    <div className="gl-sheet__scroll" role="region" aria-label="What we store" tabIndex={0}>
-      <table className="gl-sheet">
-        <caption>What we store and why</caption>
-        <thead>
-          <tr>
-            <th scope="col">Item</th>
-            <th scope="col">Why</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ROWS.map((r) => (
-            <tr key={r.what}>
-              <th scope="row" className="whitespace-normal!">
-                {r.what}
-              </th>
-              <td>{r.why}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <dl className="gl-kv gl-group" aria-label="What we store and why">
+      {ROWS.map((r) => (
+        <div key={r.what} className="gl-group__row">
+          <dt>{r.what}</dt>
+          <dd>{r.why}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

@@ -130,7 +130,7 @@ export function FilmPicker({ value, onChange, label = 'Film', search, placeholde
 
   if (value) {
     return (
-      <div className="flex items-center gap-3 border border-ink bg-surface p-3">
+      <div className="flex items-center gap-3 rounded-[var(--radius)] border border-ink bg-bg p-3">
         <FilmPoster title={value.title} posterPath={value.posterPath} />
         <div className="min-w-0 flex-1">
           <p className="ty-label text-ink-dim">{label}</p>
@@ -153,7 +153,7 @@ export function FilmPicker({ value, onChange, label = 'Film', search, placeholde
 
   return (
     <div className="relative">
-      <label htmlFor={inputId} className="ty-label mb-2 block text-ink-dim">
+      <label htmlFor={inputId} className="mb-2 block font-semibold">
         {label}
       </label>
       <input
@@ -180,7 +180,7 @@ export function FilmPicker({ value, onChange, label = 'Film', search, placeholde
         }}
         onBlur={() => setTimeout(() => setOpen(false), 120)}
         onKeyDown={onKeyDown}
-        className="w-full border border-rule bg-surface px-3 py-3 font-mono text-base text-ink placeholder:text-ink-dim"
+        className="w-full rounded-[var(--radius)] border border-rule bg-bg px-3 py-3 text-base text-ink placeholder:text-ink-dim"
       />
       <p id={hintId} className="sr-only">
         Type at least {SEARCH.minQueryLength} characters, then pick a film from the list.

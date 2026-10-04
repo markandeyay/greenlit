@@ -1,13 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { APP_NAME, COPY } from '@/config/brand';
-import { HINT_CANDIDATES_PER_PUZZLE, LAUNCH_DATE, LOSS_SCORE, RESET_TIMEZONE } from '@/config/game';
+import { HINT_CANDIDATES_PER_PUZZLE, LOSS_SCORE, RESET_TIMEZONE } from '@/config/game';
 import { HINT_TYPE_LABELS, NOT_IN_SLOT_1 } from '@/config/hints';
 import { RULES } from '@/config/rules';
-import { Breadcrumb } from '@/components/chrome/Breadcrumb';
-import { FilmMicrocopy } from '@/components/chrome/FilmMicrocopy';
-import { SceneHeading } from '@/components/chrome/SceneHeading';
-import { SlateMeta } from '@/components/chrome/SlateMeta';
+import { splitEndCredits } from '@/components/chrome/Footer';
+import { PageHeader } from '@/components/chrome/PageHeader';
 import { TmdbAttribution } from '@/components/chrome/TmdbAttribution';
 import { Chip } from '@/components/ui/Chip';
 import { Accent } from '@/components/ui/Heading';
@@ -24,7 +22,6 @@ const city = (RESET_TIMEZONE.split('/').pop() ?? RESET_TIMEZONE).replace(/_/g, '
 const greenPct = Math.round(RULES.boxOfficeGreenPct * 100);
 const closeRatio = `${RULES.boxOfficeCloseRatio}x`;
 const [note1, note2] = RULES.hintUnlockAfter;
-const hintsTitle = COPY.hintsName.replace(/(\S+)$/, '*$1*');
 const noteTypes = (Object.keys(HINT_TYPE_LABELS) as HintType[]).filter((t) => t !== 'creator_note');
 
 interface AttrRow {
@@ -113,209 +110,224 @@ const ATTRIBUTES: AttrRow[] = [
 ];
 
 export default function HowToPlayPage() {
+  const { end, credit } = splitEndCredits();
+  const [endFirst, ...endRest] = end.split(' ');
   return (
-    <main className="l-page gl-page">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Breadcrumb items={[{ label: APP_NAME, href: '/' }, { label: 'How to play' }]} />
-        <FilmMicrocopy />
-      </div>
+    <main className="l-page gl-page max-w-[820px]!">
+      <PageHeader
+        title={
+          <>
+            How to <Accent>play</Accent>
+          </>
+        }
+        lede={`Guess the mystery film in ${RULES.maxGuesses} takes. Every take shows how close you are.`}
+      />
 
-      <div className="mt-10">
-        <SlateMeta roll={LAUNCH_DATE.slice(0, 4)} scene={0} take={1} decorative />
-        <h1 className="ty-display mt-3 text-[length:var(--t-d1)]">
-          How to <Accent>play</Accent>
-        </h1>
-        <p className="ty-lede mt-5 text-ink-dim">
-          One mystery film a day, the same for everyone. You get {RULES.maxGuesses} takes. Every take tells you
-          how your film compares, and the Call Sheet keeps track of it all.
+      <section className="gl-example mt-6" aria-labelledby="htp-example">
+        <h2 id="htp-example" className="ty-label">
+          Example take
+        </h2>
+        <p className="font-semibold">You guessed a film from 2008 that made $90M.</p>
+        <div className="gl-example__cells">
+          <StatusCell verdict="match" label="Studio" value="Warner" />
+          <StatusCell verdict="close" label="Year" value="2008" direction="LATER" />
+          <StatusCell verdict="miss" label="Box office" value="$90M" direction="BIGGER" />
+          <StatusCell verdict="miss" label="Rating" value="R" />
+        </div>
+        <p className="text-[15px] text-ink-dim">
+          So the mystery film is from the same studio, came out a little later than 2008, made more than $90M, and is
+          not rated R.
         </p>
-      </div>
-
-      {/* 01 */}
-      <section className="gl-section mt-16" aria-labelledby="htp-premise">
-        <SceneHeading n={1} slug="INT. THE SCREENING ROOM - NIGHT" title="The *premise*" id="htp-premise" meta="Same film, whole world, one day" />
-        <div className="gl-section__body prose-film">
-          <ol className="grid gap-3 list-decimal pl-5">
-            <li>Type a title into the search box and pick a film. Picking it submits your take.</li>
-            <li>
-              Your take comes back as a row of cells comparing your film with the mystery film: director, cast, year,
-              box office, rating, studio, score and genres.
-            </li>
-            <li>Use what you learn to choose the next film. The Call Sheet sums up everything so far.</li>
-            <li>
-              Find the film within {RULES.maxGuesses} takes and it is <strong>{COPY.winStamp}</strong>. Run out of
-              takes, or choose <strong>{COPY.giveUp}</strong>, and it is <strong>{COPY.lossStamp}</strong>.
-            </li>
-            <li>A new reel goes up every day at midnight, {city} time.</li>
-          </ol>
-        </div>
       </section>
 
-      {/* 02 */}
-      <section className="gl-section" aria-labelledby="htp-colors">
-        <SceneHeading n={2} slug="INT. THE LAB - DAY" title="The *colors*" id="htp-colors" meta="One color means one thing" />
-        <div className="gl-section__body">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatusCell verdict="match" label="Year" value="2010" />
-            <StatusCell verdict="close" label="Year" value="2008" direction="LATER" />
-            <StatusCell verdict="miss" label="Year" value="1994" direction="LATER" />
-            <StatusCell verdict="na" label="Box office" value="N/A" />
-          </div>
-          <dl className="mt-6 grid gap-4 sm:grid-cols-2 prose-film">
-            <div>
-              <dt className="ty-label text-ink">✓ Green: match</dt>
-              <dd className="mt-1">Confirmed. The whole cell fills, for people as well as numbers.</dd>
-            </div>
-            <div>
-              <dt className="ty-label text-ink">≈ Yellow: close</dt>
-              <dd className="mt-1">Numbers only (year, box office, score). Close, but not exact.</dd>
-            </div>
-            <div>
-              <dt className="ty-label text-ink">Gray: no match</dt>
-              <dd className="mt-1">Not this. People, rating and studio are only ever green or gray.</dd>
-            </div>
-            <div>
-              <dt className="ty-label text-ink">Dashed: not available</dt>
-              <dd className="mt-1">
-                Box office is unknown for one of the films. It shows N/A and is left out of the Call Sheet.
-              </dd>
-            </div>
-          </dl>
-          <div className="prose-film mt-6">
-            <p>
-              <strong>Words, not arrows.</strong> Yellow and gray number cells say which way to go: LATER or EARLIER
-              for year, BIGGER or SMALLER for box office, HIGHER or LOWER for score. The word always describes the
-              mystery film. Green cells show no word.
-            </p>
-            <p>
-              A matched cast member gets a small <Tag>LEAD</Tag> or <Tag>SUPP</Tag> tag showing where they sit in the
-              mystery film. It is information, not a color. Genre chips light up one by one:{' '}
-              <Chip status="match">Sci-Fi</Chip> <Chip status="miss">Comedy</Chip>
-            </p>
-            <p>
-              Prefer blue and orange with patterns? Turn on colorblind mode in <Link href="/settings">Settings</Link>.
-            </p>
-          </div>
-        </div>
+      <section className="mt-8" aria-labelledby="htp-colors">
+        <h2 id="htp-colors" className="gl-h2">
+          What the colors mean
+        </h2>
+        <ul className="gl-legend mt-4">
+          <li>
+            <span className="gl-legend__swatch" data-verdict="match" aria-hidden="true">
+              ✓
+            </span>
+            <span>
+              <strong>Green: match.</strong> <span className="text-ink-dim">Exactly right.</span>
+            </span>
+          </li>
+          <li>
+            <span className="gl-legend__swatch" data-verdict="close" aria-hidden="true">
+              ≈
+            </span>
+            <span>
+              <strong>Yellow: close.</strong>{' '}
+              <span className="text-ink-dim">Numbers only: year, box office and score.</span>
+            </span>
+          </li>
+          <li>
+            <span className="gl-legend__swatch" data-verdict="miss" aria-hidden="true" />
+            <span>
+              <strong>Gray: no match.</strong> <span className="text-ink-dim">Not this one.</span>
+            </span>
+          </li>
+          <li>
+            <span className="gl-legend__swatch" data-verdict="na" aria-hidden="true">
+              N/A
+            </span>
+            <span>
+              <strong>Dashed: unknown.</strong> <span className="text-ink-dim">No data for one of the films.</span>
+            </span>
+          </li>
+        </ul>
+        <p className="mt-4 max-w-[var(--measure)] text-[15px] text-ink-dim">
+          Number cells say which way to go: LATER or EARLIER, BIGGER or SMALLER, HIGHER or LOWER. Prefer blue and
+          orange with patterns? Turn on colorblind mode in{' '}
+          <Link href="/settings" className="font-semibold text-accent-ink underline underline-offset-2">
+            Settings
+          </Link>
+          .
+        </p>
       </section>
 
-      {/* 03 */}
-      <section className="gl-section" aria-labelledby="htp-attributes">
-        <SceneHeading n={3} slug="INT. THE CASTING OFFICE - DAY" title="The *attributes*" id="htp-attributes" meta="Twelve cells per take" />
-        <div className="gl-section__body">
-          <div className="gl-sheet__scroll" role="region" aria-label="Attribute guide table" tabIndex={0}>
-            <table className="gl-sheet min-w-[720px]">
-              <caption>Attribute guide · {COPY.callSheet}</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Cell</th>
-                  <th scope="col">Shows</th>
-                  <th scope="col">✓ Green</th>
-                  <th scope="col">≈ Yellow</th>
-                  <th scope="col">Gray</th>
-                  <th scope="col">Word</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ATTRIBUTES.map((a) => (
-                  <tr key={a.cell}>
-                    <th scope="row">{a.cell}</th>
-                    <td>{a.shows}</td>
-                    <td>{a.green}</td>
-                    <td className={a.yellow === 'Never' ? 'text-ink-dim' : undefined}>{a.yellow}</td>
-                    <td>{a.gray}</td>
-                    <td className="font-mono">{a.word}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <ul className="prose-film mt-6 grid gap-2 list-disc pl-5">
-            <li>
-              Cast matching is about presence: if your lead appears anywhere in the mystery film&apos;s cast, lead or
-              supporting, the cell goes green.
-            </li>
-            <li>
-              Films with fewer than {RULES.maxSupportingCast} supporting actors show the empty slots as dashed
-              outlines.
-            </li>
-            <li>
-              If the mystery film has no rating in your region, the US rating is used and a small <Tag>US</Tag> tag
-              appears.
-            </li>
-            <li>Box office closeness is a ratio, so it is fair to small films and blockbusters alike.</li>
-          </ul>
-        </div>
+      <section className="mt-8" aria-labelledby="htp-steps">
+        <h2 id="htp-steps" className="gl-h2">
+          The basics
+        </h2>
+        <ol className="prose-film mt-4 grid list-decimal gap-2 pl-5">
+          <li>Type a title and pick a film. That is one take.</li>
+          <li>Read the cells, then pick a better film. The Call Sheet sums up everything you have learned.</li>
+          <li>
+            Find it within {RULES.maxGuesses} takes and it is <strong>{COPY.winStamp}</strong>. Run out, or choose{' '}
+            {COPY.giveUp}, and it is <strong>{COPY.lossStamp}</strong>.
+          </li>
+          <li>Everyone gets the same film. A new reel goes up at midnight, {city} time.</li>
+        </ol>
       </section>
 
-      {/* 04 */}
-      <section className="gl-section" aria-labelledby="htp-callsheet">
-        <SceneHeading n={4} slug="INT. THE CALL SHEET - NIGHT" title="The *Call Sheet*" id="htp-callsheet" meta="It remembers so you do not have to" />
-        <div className="gl-section__body prose-film">
-          <p>
-            The Call Sheet is built only from the feedback you have received. It narrows the year, box office and
-            score to a range, lists confirmed people, rating, studio and genres as <strong>{COPY.confirmed}</strong>,
-            and strikes through everything ruled out as <strong>{COPY.ruledOut}</strong>.
-          </p>
-          <p>
-            Every take also tells you how many genres the mystery film has, so the sheet can say, for example,
-            &ldquo;3 genres total.&rdquo; Tap a Call Sheet row to highlight the takes that taught you it.
-          </p>
-        </div>
-      </section>
-
-      {/* 05 */}
-      <section className="gl-section" aria-labelledby="htp-notes">
-        <SceneHeading n={5} slug="INT. THE WRITERS ROOM - NIGHT" title={hintsTitle} id="htp-notes" meta="Two optional hints" />
-        <div className="gl-section__body prose-film">
-          <p>
-            Note 1 unlocks after take {note1}. Note 2 unlocks after take {note2}. Each reel has{' '}
-            {HINT_CANDIDATES_PER_PUZZLE} possible notes. When a note unlocks you choose one of the remaining notes
-            by its type, without seeing what it says, and then reveal it.
-          </p>
-          <p>Note types:</p>
-          <ul className="flex flex-wrap gap-2" aria-label="Note types">
-            {noteTypes.map((t) => (
-              <li key={t}>
-                <Chip>
-                  {HINT_TYPE_LABELS[t]}
-                  {NOT_IN_SLOT_1.includes(t) ? ' (Note 2 only)' : ''}
-                </Chip>
+      <section className="mt-10" aria-label="Details">
+        <details className="gl-details">
+          <summary>Every cell, explained</summary>
+          <div className="gl-details__body">
+            <ul className="gl-attrs">
+              {ATTRIBUTES.map((a) => (
+                <li key={a.cell}>
+                  <p className="font-bold">{a.cell}</p>
+                  <p className="text-ink-dim">{a.shows}</p>
+                  <dl>
+                    <dt>✓ Green</dt>
+                    <dd>{a.green}</dd>
+                    {a.yellow !== 'Never' ? (
+                      <>
+                        <dt>≈ Yellow</dt>
+                        <dd>{a.yellow}</dd>
+                      </>
+                    ) : null}
+                    <dt>Gray</dt>
+                    <dd>{a.gray}</dd>
+                    {a.word !== 'None' ? (
+                      <>
+                        <dt>Word</dt>
+                        <dd className="font-mono">{a.word}</dd>
+                      </>
+                    ) : null}
+                  </dl>
+                </li>
+              ))}
+            </ul>
+            <ul className="prose-film mt-4 grid list-disc gap-2 pl-5">
+              <li>
+                Cast is about presence: if your lead appears anywhere in the mystery film&apos;s cast, the cell goes
+                green. A small <Tag>LEAD</Tag> or <Tag>SUPP</Tag> tag shows where they sit.
               </li>
-            ))}
-          </ul>
-          <p>
-            Notes never change your take count, but they are recorded: your share shows a 📝 and leaderboards have a
-            no-notes filter.
-          </p>
-        </div>
+              <li>
+                Films with fewer than {RULES.maxSupportingCast} supporting actors show the empty slots as dashed
+                outlines.
+              </li>
+              <li>
+                No rating in your region? The US rating is used and a small <Tag>US</Tag> tag appears.
+              </li>
+              <li>
+                Genre chips light up one by one: <Chip status="match">Sci-Fi</Chip> <Chip status="miss">Comedy</Chip>
+              </li>
+            </ul>
+          </div>
+        </details>
+
+        <details className="gl-details">
+          <summary>The Call Sheet</summary>
+          <div className="gl-details__body prose-film">
+            <p>
+              The Call Sheet is built only from feedback you have received. It narrows year, box office and score to
+              a range, lists what is <strong>{COPY.confirmed}</strong>, and strikes through what is{' '}
+              <strong>{COPY.ruledOut}</strong>.
+            </p>
+            <p>
+              Every take also tells you how many genres the mystery film has. Tap a Call Sheet row to highlight the
+              takes that taught you it.
+            </p>
+          </div>
+        </details>
+
+        <details className="gl-details">
+          <summary>{COPY.hintsName}</summary>
+          <div className="gl-details__body prose-film">
+            <p>
+              Two optional hints. Note 1 unlocks after take {note1}, note 2 after take {note2}. Each reel has{' '}
+              {HINT_CANDIDATES_PER_PUZZLE} possible notes; you pick one by its type, then reveal it.
+            </p>
+            <ul className="flex flex-wrap gap-2" aria-label="Note types">
+              {noteTypes.map((t) => (
+                <li key={t}>
+                  <Chip>
+                    {HINT_TYPE_LABELS[t]}
+                    {NOT_IN_SLOT_1.includes(t) ? ' (Note 2 only)' : ''}
+                  </Chip>
+                </li>
+              ))}
+            </ul>
+            <p>Notes never cost a take, but your share shows a 📝 and leaderboards have a no-notes filter.</p>
+          </div>
+        </details>
+
+        <details className="gl-details">
+          <summary>Scoring and sharing</summary>
+          <div className="gl-details__body prose-film">
+            <p>
+              Your score is the number of takes you used, from 1 to {RULES.maxGuesses}. A reel sent to turnaround
+              counts as {LOSS_SCORE} in averages.
+            </p>
+            <p>
+              Box office is green within {greenPct}% and close within {closeRatio} either way, so it is fair to small
+              films and blockbusters alike.
+            </p>
+            <p>
+              Sharing is spoiler free: a grid of squares, no titles. Past reels live in{' '}
+              <Link href="/vault">the Vault</Link>; Vault plays earn no leaderboard credit.
+            </p>
+          </div>
+        </details>
       </section>
 
-      {/* 06 */}
-      <section className="gl-section" aria-labelledby="htp-score">
-        <SceneHeading n={6} slug="INT. THE CUTTING ROOM - DAY" title="The *score*" id="htp-score" meta="Fewer takes is better" />
-        <div className="gl-section__body prose-film">
-          <p>
-            Your score is the number of takes you used, from 1 to {RULES.maxGuesses}. A reel sent to turnaround
-            counts as {LOSS_SCORE} when averages are worked out.
-          </p>
-          <p>
-            Sharing is spoiler free: your result is a grid of squares with no titles. Past reels live in{' '}
-            <Link href="/vault">the Vault</Link>; Vault plays are tracked separately and earn no leaderboard credit.
-          </p>
-        </div>
+      <section className="mt-10" aria-labelledby="htp-credits">
+        <h2 id="htp-credits" className="sr-only">
+          Film data
+        </h2>
+        <p className="mb-3 text-[15px] text-ink-dim">
+          Posters, credits, release dates, ratings, box office and scores come from TMDB.
+        </p>
+        <TmdbAttribution />
       </section>
 
-      {/* 07 */}
-      <section className="gl-section" aria-labelledby="htp-credits">
-        <SceneHeading n={7} slug="EXT. THE BACK LOT - DAY" title="The *credits*" id="htp-credits" meta="Where the film data comes from" />
-        <div className="gl-section__body">
-          <p className="prose-film">
-            Posters, credits, release dates, ratings, box office and scores come from TMDB.
-          </p>
-          <TmdbAttribution className="!mx-0 !items-start text-left" />
-        </div>
-      </section>
+      <div className="gl-theend" aria-hidden="true">
+        <p className="gl-theend__big">
+          {endRest.length > 0 ? (
+            <>
+              <Accent>{endFirst}</Accent> {endRest.join(' ')}
+            </>
+          ) : (
+            end
+          )}
+        </p>
+        {credit ? <p className="ty-label">{credit}</p> : null}
+      </div>
     </main>
   );
 }

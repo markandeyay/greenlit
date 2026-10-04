@@ -93,7 +93,7 @@ test.describe('today API', () => {
 test.describe('leaderboard', () => {
   test('page renders the period tabs, the No notes filter and the empty state in keyless mode', async ({ page }) => {
     await page.goto('/leaderboard');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('credits');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Leaderboard');
     await expect(page.getByText(`Play ${LEADERBOARD.weeklyMinDailies} of the last ${LEADERBOARD.weeklyWindowDays} daily reels`)).toBeVisible();
     const tabs = page.getByRole('tablist', { name: 'Leaderboard period' });
     await expect(tabs.getByRole('tab')).toHaveText(['Weekly', 'All time', 'Streaks']);

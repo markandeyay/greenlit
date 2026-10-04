@@ -21,3 +21,4 @@ export { SkipLink } from './SkipLink';
 export { ReelCode } from './ReelCode';
 export { TmdbMark, TmdbAttribution, TMDB_URL } from './TmdbAttribution';
 export { SettingsProvider } from './SettingsProvider';
+export { PageHeader } from './PageHeader';

@@ -128,7 +128,7 @@ describe('stats page', () => {
     const table = screen.getByRole('table', { name: /Take distribution/ });
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(RULES.maxGuesses + 1);
-    expect(within(rows[2]!).getByText('Take 3')).toBeInTheDocument();
+    expect(within(rows[2]!).getByRole('rowheader')).toHaveTextContent('Take 3');
     expect(within(rows[2]!).getByText('1')).toBeInTheDocument();
     expect(within(rows[RULES.maxGuesses]!).getByText('Sent to turnaround')).toBeInTheDocument();
     expect(within(rows[RULES.maxGuesses]!).getByText('1')).toBeInTheDocument();

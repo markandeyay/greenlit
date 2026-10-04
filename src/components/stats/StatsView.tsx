@@ -1,11 +1,10 @@
 'use client';
-// /stats body. Local stats from this device (readLocalStats + summarize); when signed in, the
+// /stats body, a Wordle-like sheet. Local stats from this device (readLocalStats + summarize); when signed in, the
 // account's server-recorded results are fetched from /api/me and can be merged in.
 import { useMemo, useState } from 'react';
 import { LOSS_SCORE } from '@/config/game';
 import { COPY } from '@/config/brand';
 import { RULES } from '@/config/rules';
-import { SceneHeading } from '@/components/chrome/SceneHeading';
 import { ButtonLink } from '@/components/ui/Button';
 import { ToggleChip } from '@/components/ui/Chip';
 import { Spinner } from '@/components/ui/Spinner';
@@ -25,21 +24,18 @@ const SOURCE_LABEL: Record<Source, string> = {
 };
 
 function Headline({ s }: { s: StatsSummary }) {
-  const items: Array<{ k: string; v: string; note?: string }> = [
+  const items: Array<{ k: string; v: string }> = [
     { k: 'Played', v: String(s.played) },
-    { k: 'Win %', v: `${s.winRate}` },
+    { k: 'Win %', v: String(s.winRate) },
     { k: 'Current streak', v: String(s.currentStreak) },
     { k: 'Max streak', v: String(s.maxStreak) },
-    { k: 'Avg takes', v: formatAverage(s.averageTakes), note: `loss counts as ${LOSS_SCORE}` },
-    { k: 'With notes', v: String(s.hintedPlays), note: COPY.hintsName },
   ];
   return (
-    <dl className="grid grid-cols-2 gap-px border border-ink bg-rule sm:grid-cols-3 lg:grid-cols-6">
+    <dl className="gl-stats-nums">
       {items.map((it) => (
-        <div key={it.k} className="grid content-start gap-1 bg-bg p-3 sm:p-4">
-          <dt className="ty-label">{it.k}</dt>
-          <dd className="ty-num text-[length:var(--t-d3)] leading-none text-ink">{it.v}</dd>
-          {it.note ? <dd className="text-xs text-ink-dim">{it.note}</dd> : null}
+        <div key={it.k}>
+          <dt>{it.k}</dt>
+          <dd>{it.v}</dd>
         </div>
       ))}
     </dl>
@@ -48,43 +44,32 @@ function Headline({ s }: { s: StatsSummary }) {
 
 function Tally({ title, s, empty }: { title: string; s: StatsSummary; empty: string }) {
   return (
-    <div className="gl-sheet__scroll" role="region" aria-label={title} tabIndex={0}>
-      <table className="gl-sheet">
-        <caption>{title}</caption>
-        <tbody>
-          {s.played === 0 ? (
-            <tr>
-              <td className="text-ink-dim">{empty}</td>
-            </tr>
-          ) : (
-            <>
-              <tr>
-                <th scope="row">Played</th>
-                <td className="ty-num">{s.played}</td>
+    <table className="w-full text-[15px]">
+      <caption className="pb-2 text-left font-semibold">{title}</caption>
+      <tbody>
+        {s.played === 0 ? (
+          <tr>
+            <td className="text-ink-dim">{empty}</td>
+          </tr>
+        ) : (
+          <>
+            {[
+              ['Played', String(s.played)],
+              ['Won', `${s.wins} (${s.winRate}%)`],
+              ['Sent to turnaround', String(s.played - s.wins)],
+              ['Average takes', formatAverage(s.averageTakes)],
+            ].map(([k, v]) => (
+              <tr key={k} className="border-t border-rule">
+                <th scope="row" className="py-1.5 text-left font-normal text-ink-dim">
+                  {k}
+                </th>
+                <td className="ty-num py-1.5 text-right">{v}</td>
               </tr>
-              <tr>
-                <th scope="row">{COPY.winStamp}</th>
-                <td className="ty-num">
-                  {s.wins} ({s.winRate}%)
-                </td>
-              </tr>
-              <tr>
-                <th scope="row">Turnaround</th>
-                <td className="ty-num">{s.played - s.wins}</td>
-              </tr>
-              <tr>
-                <th scope="row">Avg takes</th>
-                <td className="ty-num">{formatAverage(s.averageTakes)}</td>
-              </tr>
-              <tr>
-                <th scope="row">With notes</th>
-                <td className="ty-num">{s.hintedPlays}</td>
-              </tr>
-            </>
-          )}
-        </tbody>
-      </table>
-    </div>
+            ))}
+          </>
+        )}
+      </tbody>
+    </table>
   );
 }
 
@@ -108,11 +93,49 @@ export function StatsView() {
   const daily = summarize(file, 'daily');
   const vault = summarize(file, 'vault');
   const pitch = summarize(file, 'pitch');
-  const nothing = daily.played + vault.played + pitch.played === 0;
+  const nothing = daily.played === 0;
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="grid gap-8">
+      <section aria-label="Daily reels" className="grid gap-6">
+        <Headline s={daily} />
+        {nothing ? (
+          <div className="grid justify-items-start gap-3 rounded-[var(--radius-lg)] border border-dashed border-rule p-5">
+            <p className="gl-h2">Nothing in the can yet</p>
+            <p className="text-ink-dim">Finish a daily reel and your streak and distribution show up here.</p>
+            <ButtonLink href="/" variant="slate">
+              Play today&apos;s reel
+            </ButtonLink>
+          </div>
+        ) : (
+          <div className="grid gap-2">
+            <Distribution
+              distribution={daily.distribution}
+              caption={`Take distribution: takes 1 to ${RULES.maxGuesses} plus turnaround`}
+            />
+            <p className="text-sm text-ink-dim">
+              <span aria-hidden="true">✕ = {COPY.lossStamp.toLowerCase()}. </span>
+              Average {formatAverage(daily.averageTakes)} takes (a loss counts as {LOSS_SCORE})
+              {daily.hintedPlays > 0 ? ` · ${daily.hintedPlays} with ${COPY.hintsName}` : ''}.
+            </p>
+          </div>
+        )}
+      </section>
+
+      {vault.played + pitch.played > 0 ? (
+        <section aria-labelledby="stats-archive" className="grid gap-4">
+          <h2 id="stats-archive" className="gl-h2">
+            Vault and pitches
+          </h2>
+          <p className="-mt-2 text-sm text-ink-dim">Tracked separately. They never count toward the leaderboard.</p>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Tally title="The Vault" s={vault} empty="No Vault reels played yet." />
+            <Tally title="Pitches" s={pitch} empty="No pitches played yet." />
+          </div>
+        </section>
+      ) : null}
+
+      <div className="grid gap-3 border-t border-rule pt-4">
         <p className="text-sm text-ink-dim" aria-live="polite">
           {account
             ? source === 'merged'
@@ -121,8 +144,8 @@ export function StatsView() {
                 ? 'Showing results saved on this device.'
                 : 'Showing results recorded on your account.'
             : me.data?.authConfigured
-              ? 'Stats saved on this device. Sign in from Settings to sync them across devices.'
-              : 'Stats saved on this device.'}
+              ? 'Saved on this device. Sign in from Settings to sync across devices.'
+              : 'Saved on this device.'}
         </p>
         {account ? (
           <div role="group" aria-label="Stats source" className="flex flex-wrap gap-2">
@@ -134,47 +157,6 @@ export function StatsView() {
           </div>
         ) : null}
       </div>
-
-      {nothing ? (
-        <div className="mt-10 grid justify-items-start gap-4 border border-dashed border-rule p-6">
-          <p className="ty-display text-[length:var(--t-d3)]">Nothing in the can yet</p>
-          <p className="text-ink-dim">Finish a reel and your takes, streaks and distribution show up here.</p>
-          <ButtonLink href="/" variant="slate">
-            Play today&apos;s reel
-          </ButtonLink>
-        </div>
-      ) : null}
-
-      <section className="gl-section mt-12" aria-labelledby="stats-dailies">
-        <SceneHeading
-          n={1}
-          slug="INT. THE DAILIES - NIGHT"
-          title="The *dailies*"
-          meta="Daily reels"
-          id="stats-dailies"
-        />
-        <div className="gl-section__body grid gap-8">
-          <Headline s={daily} />
-          <Distribution
-            distribution={daily.distribution}
-            caption={`Take distribution: takes 1 to ${RULES.maxGuesses} plus turnaround`}
-          />
-        </div>
-      </section>
-
-      <section className="gl-section" aria-labelledby="stats-archive">
-        <SceneHeading
-          n={2}
-          slug="INT. THE VAULT - DAY"
-          title="Vault *and* pitches"
-          meta="Tracked separately, never on the leaderboard"
-          id="stats-archive"
-        />
-        <div className="gl-section__body grid gap-6 md:grid-cols-2">
-          <Tally title="The Vault" s={vault} empty="No Vault reels played yet." />
-          <Tally title="Pitches" s={pitch} empty="No pitches played yet." />
-        </div>
-      </section>
     </div>
   );
 }

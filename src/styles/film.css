@@ -84,7 +84,7 @@
     }
   }
 
-  /* ---- Header / Nav: one line of camera OSD ------------------------------------------- */
+  /* ---- Header / Nav: one slim 56px row ------------------------------------------------ */
   .gl-header {
     position: sticky;
     top: 0;
@@ -93,18 +93,24 @@
     -webkit-backdrop-filter: saturate(1.4) blur(10px);
     backdrop-filter: saturate(1.4) blur(10px);
     border-bottom: 1px solid var(--rule);
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .gl-header[data-menu-open] {
+    background: var(--bg);
   }
   .gl-nav {
     display: flex;
     align-items: center;
-    gap: var(--s4);
-    min-height: 60px;
-    padding-inline: var(--margin);
+    gap: var(--s2);
+    height: 56px;
+    max-width: calc(var(--page-max) + var(--margin) * 2);
+    margin-inline: auto;
+    padding-inline: max(var(--margin), env(safe-area-inset-left, 0px)) max(var(--margin), env(safe-area-inset-right, 0px));
   }
   .gl-nav__mark {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex: none;
     min-height: 44px;
     color: var(--ink);
@@ -113,7 +119,7 @@
   .gl-nav__word {
     font-family: var(--f-display);
     font-weight: 900;
-    font-size: 26px;
+    font-size: 24px;
     line-height: 1;
     letter-spacing: 0.01em;
     text-transform: uppercase;
@@ -121,116 +127,98 @@
   .gl-nav__links {
     display: none;
     align-items: center;
-    margin-inline-start: var(--s3);
+    gap: 2px;
+    margin-inline-start: var(--s4);
   }
   .gl-nav__link {
     position: relative;
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    padding-inline: clamp(0.7em, 1.1vw, 1.1em);
+    padding-inline: 0.8em;
+    border-radius: var(--radius);
     color: var(--ink-dim);
-    font-family: var(--f-mono);
-    font-weight: 700;
-    font-size: var(--t-label);
-    letter-spacing: var(--tr-wide);
-    text-transform: uppercase;
+    font-size: 15px;
+    font-weight: 600;
     text-decoration: none;
-    transition: color var(--d2) var(--e-out);
-  }
-  /* the reel list reads as edge print: frame lines between the names */
-  .gl-nav__link + .gl-nav__link::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 32%;
-    bottom: 32%;
-    width: 1px;
-    background: var(--rule);
-  }
-  .gl-nav__link::after {
-    content: "";
-    position: absolute;
-    left: clamp(0.7em, 1.1vw, 1.1em);
-    right: clamp(0.7em, 1.1vw, 1.1em);
-    bottom: 8px;
-    height: 2px;
-    background: currentColor;
-    transform: scaleX(0);
-    transform-origin: 100% 50%;
-    transition: transform var(--d2) var(--e-inout);
+    transition: color var(--d1) var(--e-out), background-color var(--d1) var(--e-out);
   }
   .gl-nav__link:hover {
     color: var(--ink);
+    background: var(--ink-ghost);
   }
-  .gl-nav__link[aria-current="page"],
-  .gl-nav__link[aria-current="page"]:hover {
-    color: var(--accent-ink);
-  }
-  .gl-nav__link:hover::after {
-    transform: scaleX(1);
-    transform-origin: 0 50%;
+  /* Active: ink color plus a 2px underline bar, never color alone. */
+  .gl-nav__link[aria-current="page"] {
+    color: var(--ink);
   }
   .gl-nav__link[aria-current="page"]::after {
-    transform: scaleX(1);
+    content: "";
+    position: absolute;
+    left: 0.8em;
+    right: 0.8em;
+    bottom: 6px;
+    height: 2px;
+    background: var(--ink);
   }
-  /* Active marker that does not rely on the underline alone: a frame tick. */
-  .gl-nav__link[aria-current="page"] .gl-nav__tick {
-    display: inline-block;
-  }
-  .gl-nav__tick {
+  .gl-nav__link[data-tier="more"] {
     display: none;
-    width: 5px;
-    height: 5px;
-    margin-inline-end: 0.5em;
-    background: currentColor;
   }
   .gl-nav__meta {
     display: flex;
     align-items: center;
-    gap: var(--s2);
+    gap: 2px;
     margin-inline-start: auto;
   }
   .gl-nav__icons {
-    display: none;
+    display: flex;
     align-items: center;
   }
   .gl-nav__pitch {
     display: none;
   }
-  .gl-nav__tc {
+  .gl-tc.gl-nav__tc {
     display: none;
+    margin-inline-end: var(--s3);
+    font-size: var(--t-micro);
+    color: var(--ink-dim);
   }
   .gl-nav__burger {
     display: inline-grid;
   }
-  @media (min-width: 560px) {
-    .gl-nav__tc {
-      display: inline-flex;
+  @media (min-width: 640px) {
+    .gl-nav__links {
+      display: flex;
     }
   }
   @media (min-width: 1024px) {
-    .gl-nav__links,
-    .gl-nav__icons {
-      display: flex;
+    .gl-nav__link[data-tier="more"] {
+      display: inline-flex;
+    }
+    .gl-tc.gl-nav__tc {
+      display: inline-flex;
     }
     .gl-nav__pitch {
       display: inline-flex;
-      margin-inline-start: var(--s2);
+      margin-inline-start: var(--s3);
     }
     .gl-nav__burger {
       display: none;
     }
   }
 
-  /* Mobile menu (disclosure) */
+  /* Mobile menu: a full-height sheet under the header with large rows. */
   .gl-menu {
-    border-top: 1px solid var(--rule);
-    background: var(--bg);
-    padding: var(--s3) var(--margin) var(--s5);
-    box-shadow: var(--shadow-md);
-    max-height: calc(100dvh - 90px);
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: calc(100dvh - 56px - env(safe-area-inset-top, 0px));
     overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--bg);
+    border-top: 1px solid var(--rule);
+    padding: var(--s2) max(var(--margin), env(safe-area-inset-right, 0px)) calc(var(--s6) + env(safe-area-inset-bottom, 0px)) max(var(--margin), env(safe-area-inset-left, 0px));
+    animation: gl-menu-in var(--d1) var(--e-out);
   }
   .gl-menu[hidden] {
     display: none;
@@ -248,48 +236,47 @@
   }
   .gl-menu__link {
     display: flex;
-    align-items: baseline;
+    align-items: center;
+    justify-content: space-between;
     gap: var(--s3);
-    min-height: 52px;
-    padding-block: var(--s2);
+    min-height: 60px;
     border-bottom: 1px solid var(--rule);
     color: var(--ink);
     text-decoration: none;
     font-family: var(--f-display);
-    font-weight: 900;
-    font-size: 30px;
-    line-height: 1.2;
+    font-weight: 800;
+    font-size: 28px;
+    line-height: 1.1;
     text-transform: uppercase;
   }
-  .gl-menu__link .gl-menu__n {
-    font-family: var(--f-mono);
-    font-weight: 700;
-    font-size: var(--t-micro);
-    letter-spacing: var(--tr-wide);
+  .gl-menu__chev {
+    width: 20px;
+    height: 20px;
     color: var(--ink-dim);
-    min-width: 2.4em;
   }
   .gl-menu__link[aria-current="page"] {
     color: var(--accent-ink);
-    text-decoration: underline;
-    text-decoration-thickness: 3px;
-    text-underline-offset: 6px;
   }
-  .gl-menu__link--sm {
-    font-family: var(--f-mono);
-    font-size: var(--t-small);
-    font-weight: 700;
-    letter-spacing: var(--tr-wide);
-    min-height: 46px;
-    align-items: center;
+  .gl-menu__link[aria-current="page"] > span::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-inline-end: 10px;
+    vertical-align: middle;
+    background: currentColor;
   }
   .gl-menu__foot {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
+    display: grid;
+    justify-items: center;
     gap: var(--s4);
-    margin-top: var(--s5);
+    margin-top: var(--s6);
+  }
+  .gl-menu__foot .gl-btn {
+    width: 100%;
+  }
+  .gl-menu__tc {
+    font-size: var(--t-label);
   }
 
   /* ---- Timecode ----------------------------------------------------------------------- */
@@ -480,67 +467,46 @@
     text-transform: uppercase;
   }
 
-  /* ---- Footer: THE END bracketed by tail leader --------------------------------------- */
+  /* ---- Footer: slim, two rows --------------------------------------------------------- */
   .gl-footer {
-    position: relative;
     margin-top: var(--s8);
-    /* A printed end card on warm paper, bracketed by two ink lengths of tail leader. */
+    border-top: 1px solid var(--rule);
     background: var(--paper-warm);
     color: var(--ink);
   }
   .gl-footer__inner {
-    padding: var(--s7) var(--margin) var(--s6);
-    text-align: center;
-  }
-  .gl-footer__end {
     display: grid;
-    justify-items: center;
-    gap: var(--s3);
+    gap: var(--s4);
+    max-width: calc(var(--page-max) + var(--margin) * 2);
+    margin-inline: auto;
+    padding: var(--s5) var(--margin) calc(var(--s5) + env(safe-area-inset-bottom, 0px));
   }
-  .gl-footer__big {
-    font-family: var(--f-display);
-    font-weight: 900;
-    text-transform: uppercase;
-    font-size: clamp(64px, 11vw, 148px);
-    line-height: 0.82;
-    letter-spacing: -0.01em;
+  .gl-footer__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s2) var(--s5);
   }
-  .gl-footer__big .ty-accent {
-    font-size: 0.9em;
-  }
-  .gl-footer__sub {
-    font-family: var(--f-mono);
-    font-weight: 700;
-    font-size: var(--t-label);
-    letter-spacing: var(--tr-wide);
-    text-transform: uppercase;
-    color: var(--ink-dim);
-  }
-  .gl-footer__credits {
-    max-width: 560px;
-    margin: var(--s7) auto 0;
+  .gl-footer__row--fine {
+    align-items: flex-start;
+    padding-top: var(--s4);
+    border-top: 1px solid var(--rule);
   }
   .gl-footer__links {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    margin-top: var(--s7);
+    margin: 0 calc(-1 * var(--s3));
     list-style: none;
     padding: 0;
-    font-family: var(--f-mono);
-    font-weight: 700;
-    font-size: var(--t-label);
-    letter-spacing: var(--tr-wide);
-    text-transform: uppercase;
-  }
-  .gl-footer__links li + li {
-    border-inline-start: 1px solid var(--rule);
+    font-size: var(--t-small);
+    font-weight: 600;
   }
   .gl-footer__links a {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    padding-inline: 0.9em;
+    padding-inline: var(--s3);
     color: var(--ink);
     text-decoration: none;
   }
@@ -551,23 +517,21 @@
   }
   .gl-footer__tmdb {
     display: flex;
-    flex-direction: column;
     align-items: center;
     gap: var(--s3);
-    margin: var(--s7) auto 0;
-    max-width: 520px;
-    font-size: var(--t-small);
+    max-width: 52ch;
+    font-size: 13px;
+    line-height: 1.45;
     color: var(--ink-dim);
   }
+  .gl-footer__tmdb p {
+    margin: 0;
+  }
   .gl-footer__fine {
-    margin: var(--s5) auto 0;
-    max-width: 60ch;
-    font-family: var(--f-mono);
-    font-weight: 700;
-    font-size: var(--t-micro);
-    line-height: 1.9;
-    letter-spacing: var(--tr-wide);
-    text-transform: uppercase;
+    margin: 0;
+    max-width: 52ch;
+    font-size: 13px;
+    line-height: 1.45;
     color: var(--ink-dim);
   }
 
@@ -749,14 +713,19 @@
 
   /* ---- Not-found and content page framing -------------------------------------------- */
   .gl-page {
-    padding-top: var(--s7);
-    padding-bottom: var(--s7);
+    padding-top: var(--s5);
+    padding-bottom: var(--s6);
+  }
+  @media (min-width: 768px) {
+    .gl-page {
+      padding-top: var(--s6);
+    }
   }
   .gl-section + .gl-section {
-    margin-top: var(--s9);
+    margin-top: var(--s7);
   }
   .gl-section__body {
-    margin-top: var(--s6);
+    margin-top: var(--s4);
   }
 
   /* Call-sheet style table for structured info (attribute guide). */
@@ -817,113 +786,471 @@
   100% { transform: scale(1); }
 }
 
-/* ---- Modes hub: the multiplex (src/app/modes/page.tsx) ------------------------------- */
+@keyframes gl-menu-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---- Content pages: one compact title, then the content (design brief v2) ------------- */
 @layer components {
-  .gl-hub {
+  .gl-pagehead {
     display: grid;
-    gap: var(--s4);
+    gap: var(--s2);
+  }
+  .gl-pagehead__title {
+    font-size: clamp(38px, 7vw, 64px);
+    line-height: 0.92;
+  }
+  .gl-pagehead__lede {
+    max-width: 52ch;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink-dim);
+  }
+  /* Section title inside a page: plain display, no scene-heading kicker. */
+  .gl-h2 {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 24px;
+    line-height: 1.05;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+  }
+
+  /* A rounded group of rows (settings). */
+  .gl-group {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .gl-group > * + * {
+    border-top: 1px solid var(--rule);
+  }
+  .gl-group__row {
+    padding: var(--s4);
+  }
+
+  /* ---- Modes hub ------------------------------------------------------------------------ */
+  .gl-modes {
+    display: grid;
+    gap: var(--s3);
     list-style: none;
-    margin-block-end: 0;
+    margin: 0;
     padding: 0;
   }
-  @media (min-width: 640px) {
-    .gl-hub { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
-  @media (min-width: 1024px) {
-    .gl-hub { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  }
-  .gl-hub > li {
-    display: flex;
-    min-width: 0;
-  }
-  .gl-hub__card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: var(--s3);
-    width: 100%;
-    padding: var(--s5) var(--s5) var(--s4);
-    border: 1.5px solid var(--ink);
+  .gl-mode {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s3) var(--s4);
+    height: 100%;
+    padding: var(--s3);
+    border: 1px solid var(--rule);
     border-radius: var(--radius-lg);
     background: var(--surface);
     color: var(--ink);
     text-decoration: none;
     box-shadow: var(--shadow-sm);
-    transition: transform var(--d2) var(--e-out), box-shadow var(--d2) var(--e-out), border-color var(--d2) var(--e-out);
+    transition: box-shadow var(--d2) var(--e-out), border-color var(--d2) var(--e-out);
   }
-  /* ticket-stub perforation along the top edge */
-  .gl-hub__card::before {
-    content: "";
-    position: absolute;
-    left: var(--s5);
-    right: var(--s5);
-    top: -1px;
-    height: 6px;
-    background: radial-gradient(circle at 50% 0, var(--bg) 3px, transparent 3.5px) 0 0 / 14px 6px repeat-x;
-  }
-  a.gl-hub__card:hover {
-    transform: translateY(-3px);
+  .gl-mode:hover {
+    border-color: var(--ink);
     box-shadow: var(--shadow-md);
-    border-color: var(--accent-ink);
   }
-  .gl-hub__top {
+  .gl-mode__art {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .gl-mode__art[data-tone="navy"] {
+    background: var(--navy);
+    color: var(--on-navy);
+  }
+  .gl-mode__art[data-tone="blue"] {
+    background: var(--revision-blue);
+    color: var(--navy);
+  }
+  .gl-mode__art svg {
+    width: 34px;
+    height: 34px;
+  }
+  .gl-mode__body {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .gl-mode__name {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 22px;
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+  .gl-mode__pitch {
+    font-size: 15px;
+    line-height: 1.35;
+    color: var(--ink-dim);
+  }
+  .gl-mode__badge {
+    justify-self: start;
+    margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    padding: 1px 8px;
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .gl-mode__play {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 64px;
+    min-height: 40px;
+    padding-inline: 14px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .gl-mode[data-featured] .gl-mode__play {
+    background: var(--navy);
+    color: var(--on-navy);
+  }
+  @media (min-width: 720px) {
+    .gl-modes {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--s4);
+    }
+  }
+  @media (min-width: 1024px) {
+    .gl-modes {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .gl-mode {
+      grid-template-columns: minmax(0, 1fr);
+      align-content: start;
+      padding: var(--s4);
+    }
+    .gl-mode__art {
+      width: 100%;
+      height: 120px;
+    }
+    .gl-mode__art svg {
+      width: 56px;
+      height: 56px;
+    }
+    .gl-mode__play {
+      justify-self: start;
+    }
+  }
+
+  /* ---- Vault list ----------------------------------------------------------------------- */
+  .gl-reels {
+    display: grid;
+    gap: var(--s2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  @media (min-width: 640px) {
+    .gl-reels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1024px) {
+    .gl-reels { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  .gl-reel {
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+    min-height: 72px;
+    padding: var(--s3) var(--s4) var(--s3) var(--s3);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    color: var(--ink);
+    text-decoration: none;
+    transition: border-color var(--d1) var(--e-out), box-shadow var(--d1) var(--e-out);
+  }
+  .gl-reel:hover {
+    border-color: var(--ink);
+    box-shadow: var(--shadow-sm);
+  }
+  /* The one film motif here: each reel number sits on a little film can. */
+  .gl-reel__can {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+    background: radial-gradient(circle, var(--surface) 0 40%, var(--surface-2) 41% 100%);
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .gl-reel__body {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+  }
+  .gl-reel__title {
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .gl-reel__sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    color: var(--ink-dim);
+  }
+  .gl-reel__badge:not(:empty) {
+    margin-top: 4px;
+  }
+  .gl-reel__arrow {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    color: var(--ink-dim);
+  }
+  .gl-callout {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--s3);
+    padding: var(--s4);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
   }
-  .gl-hub__title {
-    display: block;
-    margin-top: var(--s3);
-    font-size: var(--t-d3);
+
+  /* ---- Stats sheet ---------------------------------------------------------------------- */
+  .gl-stats-nums {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s2);
+    margin: 0;
   }
-  .gl-hub__pitch {
+  .gl-stats-nums > div {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    padding: var(--s3) var(--s1);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    text-align: center;
+  }
+  .gl-stats-nums dt {
+    font-size: 12px;
+    line-height: 1.2;
     color: var(--ink-dim);
-    max-width: 36ch;
   }
-  .gl-hub__cta {
-    margin-top: auto;
-    padding-top: var(--s4);
-    border-top: 1px solid var(--rule);
+  .gl-stats-nums dd {
+    margin: 0;
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: clamp(32px, 9vw, 48px);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .gl-dist {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 4px;
+  }
+  .gl-dist caption {
+    caption-side: top;
+    text-align: left;
+    padding-bottom: var(--s2);
+  }
+  .gl-dist th {
+    width: 2.4em;
+    padding-right: var(--s2);
+    text-align: right;
     font-family: var(--f-mono);
     font-weight: 700;
-    font-size: var(--t-label);
-    letter-spacing: var(--tr-wide);
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .gl-dist td {
+    padding: 0;
+  }
+  .gl-dist__bar {
+    display: flex;
+    width: fit-content;
+    justify-content: flex-end;
+    align-items: center;
+    min-width: 28px;
+    height: 24px;
+    padding-inline: 8px;
+    border-radius: 3px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .gl-dist__bar[data-zero] {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .gl-dist__bar[data-loss] {
+    border: 1px dashed var(--ink-dim);
+    background: repeating-linear-gradient(135deg, var(--surface-2) 0 4px, var(--miss) 4px 8px);
+    color: var(--ink);
+  }
+
+  /* Key/value list (settings privacy). */
+  .gl-kv {
+    display: grid;
+    margin: 0;
+  }
+  .gl-kv dt {
+    font-weight: 700;
+  }
+  .gl-kv dd {
+    margin: 2px 0 0;
+    color: var(--ink-dim);
+  }
+
+  /* ---- How to play ---------------------------------------------------------------------- */
+  .gl-example {
+    display: grid;
+    gap: var(--s3);
+    padding: var(--s4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .gl-example__cells {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s2);
+  }
+  @media (min-width: 560px) {
+    .gl-example__cells { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  .gl-legend {
+    display: grid;
+    gap: var(--s3);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  @media (min-width: 720px) {
+    .gl-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .gl-legend li {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--s3);
+  }
+  .gl-legend__swatch {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 18px;
+  }
+  .gl-legend__swatch[data-verdict="match"] { background: var(--green); color: var(--green-ink); }
+  .gl-legend__swatch[data-verdict="close"] { background: var(--amber); color: var(--amber-ink); }
+  .gl-legend__swatch[data-verdict="miss"] { background: var(--miss); color: var(--miss-ink); }
+  .gl-legend__swatch[data-verdict="na"] { border: 1.5px dashed var(--ink-dim); color: var(--ink-dim); font-size: 11px; }
+  .gl-details {
+    border-top: 1px solid var(--rule);
+  }
+  .gl-details:last-of-type {
+    border-bottom: 1px solid var(--rule);
+  }
+  .gl-details > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s3);
+    min-height: 56px;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 22px;
     text-transform: uppercase;
-    color: var(--accent-ink);
   }
-  .gl-hub__card--later {
-    border-style: dashed;
-    border-color: var(--ink-dim);
-    background: transparent;
-    box-shadow: none;
-  }
-  .gl-hub__card--later::before {
+  .gl-details > summary::-webkit-details-marker {
     display: none;
   }
-  .gl-hub__why {
-    margin-top: auto;
-    padding-top: var(--s3);
-    border-top: 1px dashed var(--rule);
-    font-size: var(--t-small);
+  .gl-details > summary::after {
+    content: "+";
+    font-family: var(--f-mono);
+    font-size: 22px;
     color: var(--ink-dim);
   }
-  .gl-hub__lot {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s2) var(--s5);
-    list-style: none;
-    padding: 0;
-    font-family: var(--f-mono);
-    font-weight: 700;
-    font-size: var(--t-small);
+  .gl-details[open] > summary::after {
+    content: "\2212";
   }
-  .gl-hub__lot a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    color: var(--accent-ink);
-    text-decoration: underline;
-    text-underline-offset: 4px;
+  .gl-details__body {
+    padding-bottom: var(--s5);
+  }
+  .gl-attrs {
+    display: grid;
+    gap: var(--s3);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  @media (min-width: 720px) {
+    .gl-attrs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .gl-attrs > li {
+    padding: var(--s3) var(--s4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-size: 15px;
+  }
+  .gl-attrs dl {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 2px var(--s3);
+    margin: var(--s2) 0 0;
+  }
+  .gl-attrs dt {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .gl-attrs dd {
+    margin: 0;
+    color: var(--ink-dim);
+  }
+  /* The End flourish lives on How to play only. */
+  .gl-theend {
+    display: grid;
+    justify-items: center;
+    gap: var(--s2);
+    margin-top: var(--s8);
+    text-align: center;
+  }
+  .gl-theend__big {
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: clamp(56px, 12vw, 112px);
+    line-height: 0.85;
+    text-transform: uppercase;
   }
 }

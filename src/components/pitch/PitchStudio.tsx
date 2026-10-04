@@ -75,18 +75,13 @@ export function PitchStudio() {
   return (
     <div className="grid gap-10">
       {created ? (
-        <Panel
-          variant="sheet"
-          head={
-            <>
-              <span>Call sheet · Pitch locked</span>
-              <span aria-hidden="true">● REC</span>
-            </>
-          }
-        >
+        <Panel variant="raised" aria-label="Pitch ready">
           <div className="grid gap-5">
-            <p className="ty-lede">
-              Your pitch is in the can. Send the link: your friend gets {RULES.maxGuesses} takes to guess{' '}
+            <p className="gl-h2">
+              <span aria-hidden="true">✓ </span>Your pitch is ready
+            </p>
+            <p className="text-[17px] leading-normal">
+              Send the link. Your friend gets {RULES.maxGuesses} takes to guess{' '}
               <strong>{created.film.title}</strong>
               {created.note ? ', and your note unlocks after take ' + PITCH.noteUnlockAfter : ''}.
             </p>
@@ -103,11 +98,11 @@ export function PitchStudio() {
         </Panel>
       ) : (
         <form onSubmit={submit} className="grid gap-6" aria-describedby={error ? `${noteId}-err` : undefined}>
-          <Panel variant="sheet" head={<><span>Call sheet · New pitch</span><span>Sc 01</span></>}>
+          <Panel variant="raised" aria-label="New pitch">
             <div className="grid gap-6">
               <FilmPicker value={film} onChange={setFilm} label="01 · The film" placeholder="Search for the film to pitch" />
               <div>
-                <label htmlFor={noteId} className="ty-label mb-2 block text-ink-dim">
+                <label htmlFor={noteId} className="mb-2 block font-semibold">
                   02 · Director&apos;s note (optional)
                 </label>
                 <textarea
@@ -117,12 +112,12 @@ export function PitchStudio() {
                   rows={3}
                   aria-describedby={countId}
                   aria-invalid={over || undefined}
-                  placeholder={`A clue your friend can unlock after take ${PITCH.noteUnlockAfter}`}
-                  className="w-full resize-y border border-rule bg-surface px-3 py-3 text-base text-ink placeholder:text-ink-dim"
+                  placeholder="A friendly clue"
+                  className="w-full resize-y rounded-[var(--radius)] border border-rule bg-bg px-3 py-3 text-base text-ink placeholder:text-ink-dim"
                 />
-                <div className="mt-1 flex flex-wrap justify-between gap-2 font-mono text-xs text-ink-dim">
-                  <span>Plain text. Keep it friendly and do not name the film.</span>
-                  <span id={countId} className={cx('tabular-nums', over && 'font-bold text-ink underline')}>
+                <div className="mt-1 flex flex-wrap justify-between gap-2 text-sm text-ink-dim">
+                  <span>Hidden until take {PITCH.noteUnlockAfter}. Do not name the film.</span>
+                  <span id={countId} className={cx('font-mono tabular-nums', over && 'font-bold text-ink underline')}>
                     {len} / {PITCH.noteMaxLength}
                     {over ? ` (${-remaining} over)` : ''}
                   </span>
@@ -141,11 +136,11 @@ export function PitchStudio() {
               {error}
             </p>
           ) : null}
-          <div>
+          <div className="grid justify-items-start gap-2">
             <Button type="submit" variant="slate" size="lg" disabled={!film || busy || over} take={busy ? 'Rolling' : undefined}>
               {busy ? 'Creating' : 'Create challenge'}
             </Button>
-            {!film ? <p className="mt-2 font-mono text-xs text-ink-dim">Pick a film to continue.</p> : null}
+            {!film ? <p className="text-sm text-ink-dim">Pick a film to continue.</p> : null}
           </div>
         </form>
       )}
@@ -154,12 +149,12 @@ export function PitchStudio() {
 
       {recent.length > 0 ? (
         <section aria-labelledby={`${noteId}-recent`}>
-          <h2 id={`${noteId}-recent`} className="ty-label mb-3 text-ink-dim">
-            Your recent pitches (this device)
+          <h2 id={`${noteId}-recent`} className="gl-h2 mb-3">
+            Your recent pitches
           </h2>
           <ul className="grid gap-2">
             {recent.map((p) => (
-              <li key={p.slug} className="flex flex-wrap items-center gap-3 border border-rule p-2">
+              <li key={p.slug} className="flex flex-wrap items-center gap-2 rounded-[var(--radius)] border border-rule bg-surface p-2 pl-3">
                 <span className="min-w-0 flex-1 truncate">
                   {p.film.title} <span className="font-mono text-sm text-ink-dim tabular-nums">{p.film.year}</span>
                 </span>

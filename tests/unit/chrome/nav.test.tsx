@@ -7,7 +7,7 @@ let pathname = '/';
 vi.mock('next/navigation', () => ({ usePathname: () => pathname }));
 
 import { Nav } from '@/components/chrome/Nav';
-import { Footer } from '@/components/chrome/Footer';
+import { Footer, PRIVACY_NOTE } from '@/components/chrome/Footer';
 
 afterEach(cleanup);
 
@@ -22,11 +22,11 @@ beforeEach(() => {
 });
 
 describe('<Nav>', () => {
-  it('renders the wordmark, the four routes, utilities and the pitch slate', () => {
+  it('renders the wordmark, the four routes, utility icons, the pitch slate and the countdown', () => {
     render(<Nav />);
     expect(screen.getAllByText(APP_NAME).length).toBeGreaterThan(0);
     const main = screen.getByRole('navigation', { name: 'Main' });
-    expect(within(main).getAllByRole('link').map((a) => a.textContent)).toEqual(['Today', 'Vault', 'Modes', 'Leaderboard']);
+    expect(within(main).getAllByRole('link').map((a) => a.textContent)).toEqual(['Today', 'Modes', 'Vault', 'Leaderboard']);
     expect(screen.getByRole('link', { name: 'How to play' })).toHaveAttribute('href', '/how-to-play');
     expect(screen.getByRole('link', { name: 'Stats' })).toHaveAttribute('href', '/stats');
     expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings');
@@ -68,13 +68,19 @@ describe('<Nav>', () => {
 });
 
 describe('<Footer>', () => {
-  it('shows end credits from COPY and the TMDB attribution', () => {
+  it('is slim: links, the TMDB attribution and one privacy line, with no credits roll', () => {
     render(<Footer />);
-    const [end, credit] = COPY.endCredits.split(' · ');
-    expect(screen.getByText(credit!)).toBeInTheDocument();
-    expect(document.body.textContent).toContain(end!.split(' ').pop()!);
     expect(screen.getByText(TMDB_ATTRIBUTION)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /TMDB/ })).toHaveAttribute('href', 'https://www.themoviedb.org/');
-    expect(screen.getByRole('link', { name: 'How to play' })).toBeInTheDocument();
+    const nav = screen.getByRole('navigation', { name: 'Footer' });
+    expect(within(nav).getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([
+      '/how-to-play',
+      '/vault',
+      '/leaderboard',
+      '/stats',
+      '/settings',
+    ]);
+    expect(screen.getByText(PRIVACY_NOTE)).toBeInTheDocument();
+    expect(document.querySelector('.gl-strip, .gl-roll')).toBeNull();
   });
 });

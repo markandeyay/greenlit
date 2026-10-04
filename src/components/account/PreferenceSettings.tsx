@@ -55,29 +55,31 @@ export function PreferenceSettings() {
   const regionName = settings.region ? `${REGIONS[settings.region].name} (${REGIONS[settings.region].board})` : null;
 
   return (
-    <div className="grid gap-8">
-      <div className="grid gap-2">
+    <div className="gl-group">
+      <div className="gl-group__row grid gap-2">
         <RadioChips<RegionChoice>
           name="region"
           legend="Ratings region"
-          description="Which certification the Rating cell compares, for example PG-13 or 12A."
+          description="Which age rating the Rating cell shows, for example PG-13 or 12A. If a film has none there, the US rating is used."
           options={REGION_OPTIONS}
           value={settings.region ?? AUTO}
           onChange={(v) => applyRegion(v === AUTO ? null : v, update, signedIn)}
         />
         <p className="text-sm text-ink-dim" aria-live="polite">
-          {regionName ? `Using ${regionName}.` : 'Using your browser language to pick a region.'} If a film has no
-          rating there, we fall back to the US rating and mark it.
+          {regionName ? `Using ${regionName}.` : 'Using your browser language to pick a region.'}
         </p>
       </div>
 
+      <div className="gl-group__row">
       <Switch
         checked={settings.colorblind}
         onChange={(colorblind) => update({ colorblind })}
         label="Colorblind mode"
         description="Swaps green and amber for blue and orange and adds patterns to every cell."
       />
+      </div>
 
+      <div className="gl-group__row">
       <RadioChips<ClientSettings['reducedMotion']>
         name="reduced-motion"
         legend="Motion"
@@ -86,6 +88,7 @@ export function PreferenceSettings() {
         value={settings.reducedMotion}
         onChange={(reducedMotion) => update({ reducedMotion })}
       />
+      </div>
     </div>
   );
 }

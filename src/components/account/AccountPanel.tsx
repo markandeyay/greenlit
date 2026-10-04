@@ -4,7 +4,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
-import { Tag } from '@/components/ui/Tag';
 import { HandleForm } from './HandleForm';
 import { SignInPanel } from './SignInPanel';
 import { useMe } from './useMe';
@@ -32,14 +31,11 @@ function useAuthNotice(): string | null {
 
 export function AccountsOpenSoon() {
   return (
-    <div className="grid gap-2">
-      <p className="ty-label">
-        <Tag tone="dim">In pre-production</Tag>
-      </p>
-      <p>Accounts open soon.</p>
+    <div className="grid gap-1">
+      <p className="font-semibold">Accounts open soon.</p>
       <p className="text-ink-dim">
-        For now everything lives on this device: your takes, streaks and stats. When accounts open you can sign in
-        and bring them with you, then claim a spot on the leaderboard.
+        For now your takes, streaks and stats live on this device. When accounts open you can sign in, bring them
+        with you and claim a spot on the leaderboard.
       </p>
     </div>
   );
