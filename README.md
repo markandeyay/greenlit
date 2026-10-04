@@ -32,7 +32,7 @@ pnpm db:verify   # applies supabase/migrations to a throwaway Docker Postgres an
 | Supabase | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Durable plays, accounts (magic link, Google, X), leaderboards, global stats, `/admin` |
 | TMDB | `TMDB_READ_TOKEN` (or `TMDB_API_KEY`) | Real ~4,000 film library with posters, headshots, trailers (`scripts/ingest/README.md`) |
 | Upstash Redis | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Cross-instance rate limits (in-memory fallback otherwise) |
-| Admin | `ADMIN_EMAILS` | Comma-separated emails allowed into `/admin` |
+| Admin | `ADMIN_EMAILS` | Comma-separated emails allowed into `/admin`. For local scheduling without auth: `ADMIN_DEV_OPEN=1 pnpm dev` |
 | Signing | `SESSION_SECRET` | Signs the keyless play cookie and encrypts keyless pitch slugs (already set on Vercel) |
 
 Supabase project setup: run every file in `supabase/migrations/` in order (SQL editor or `supabase db push`). The app loads the bundled library and writes the default schedule into an empty database on first request. For auth, add `<site>/auth/callback` to the Supabase redirect allow-list and enable the Google and X providers.

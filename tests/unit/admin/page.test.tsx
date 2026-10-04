@@ -34,6 +34,7 @@ describe('/admin', () => {
   it('opens in development with a clear notice', async () => {
     auth.user = null;
     vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('ADMIN_DEV_OPEN', '1');
     render(await AdminPage());
     expect(screen.getByTestId('console')).toBeInTheDocument();
     expect(screen.getByText(/Development mode/)).toBeInTheDocument();

@@ -2,9 +2,9 @@
 //
 // Allowed when:
 //   1. the signed-in user is an admin (getCurrentUser()?.isAdmin, i.e. email in ADMIN_EMAILS), OR
-//   2. process.env.NODE_ENV === 'development' (LOCAL DEV CONVENIENCE ONLY: `pnpm dev` opens the
-//      admin to anyone on your machine so you can schedule against the fixture library without
-//      setting up auth. `next build` / `next start` and Vercel always run with NODE_ENV
+//   2. process.env.NODE_ENV === 'development' AND ADMIN_DEV_OPEN=1 (LOCAL DEV CONVENIENCE ONLY,
+//      explicit opt-in: `ADMIN_DEV_OPEN=1 pnpm dev` opens the admin to anyone on your machine so you
+//      can schedule against the fixture library without setting up auth. `next build` / `next start` and Vercel always run with NODE_ENV
 //      'production', where only real admins get in).
 // Everyone else gets a polite sign-in screen (no data) and the APIs answer 403.
 import 'server-only';
@@ -19,9 +19,13 @@ export interface AdminAccess {
 }
 
 /** Pure decision, exported for tests. */
-export function decideAdminAccess(user: SessionUser | null, nodeEnv: string | undefined): AdminAccess {
+export function decideAdminAccess(
+  user: SessionUser | null,
+  nodeEnv: string | undefined,
+  devOpen: string | undefined = process.env.ADMIN_DEV_OPEN,
+): AdminAccess {
   if (user?.isAdmin) return { allowed: true, user, devBypass: false };
-  if (nodeEnv === 'development') return { allowed: true, user, devBypass: true };
+  if (nodeEnv === 'development' && devOpen === '1') return { allowed: true, user, devBypass: true };
   return { allowed: false, user, devBypass: false };
 }
 

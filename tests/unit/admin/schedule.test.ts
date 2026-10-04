@@ -46,7 +46,8 @@ describe('admin gate', () => {
     expect(decideAdminAccess(PLAYER, 'production').allowed).toBe(false);
     expect(decideAdminAccess(null, 'production').allowed).toBe(false);
     expect(decideAdminAccess(null, 'test').allowed).toBe(false);
-    expect(decideAdminAccess(null, 'development')).toMatchObject({ allowed: true, devBypass: true });
+    expect(decideAdminAccess(null, 'development', '1')).toMatchObject({ allowed: true, devBypass: true });
+    expect(decideAdminAccess(null, 'development', undefined).allowed).toBe(false);
   });
 
   it('every admin API answers 403 with no data for non-admins', async () => {
@@ -68,9 +69,11 @@ describe('admin gate', () => {
     }
   });
 
-  it('opens under NODE_ENV=development without a session', async () => {
+  it('opens under NODE_ENV=development only with ADMIN_DEV_OPEN=1', async () => {
     auth.user = null;
     vi.stubEnv('NODE_ENV', 'development');
+    expect((await get(scheduleGET as never, '/api/admin/schedule')).status).toBe(403);
+    vi.stubEnv('ADMIN_DEV_OPEN', '1');
     expect((await get(scheduleGET as never, '/api/admin/schedule')).status).toBe(200);
   });
 });
