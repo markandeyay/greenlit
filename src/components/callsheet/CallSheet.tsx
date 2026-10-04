@@ -18,7 +18,8 @@ export type CallSheetRowId = string;
 export interface CallSheetProps {
   /** Feedback so far, oldest first. The sheet never sees the answer. */
   feedback: readonly GuessFeedback[];
-  reelNumber: number;
+  /** Reel number, or null for pitches (header shows "Pitch"). */
+  reelNumber: number | null;
   /** Takes used so far (usually feedback.length). */
   take: number;
   maxGuesses: number;
@@ -281,12 +282,12 @@ function buildRows(s: CallSheetState, playerRegion: RegionCode | undefined): Row
 // The sheet
 // ---------------------------------------------------------------------------
 
-export function CallSheetHeader({ reelNumber, take, maxGuesses, id }: { reelNumber: number; take: number; maxGuesses: number; id?: string }) {
+export function CallSheetHeader({ reelNumber, take, maxGuesses, id }: { reelNumber: number | null; take: number; maxGuesses: number; id?: string }) {
   return (
     <h2 id={id} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-mono text-xs tracking-widest text-ink">
       <span className="font-display text-sm font-bold">{COPY.callSheet}</span>
       <span aria-hidden="true" className="text-ink-dim">·</span>
-      <span className="tabular-nums">{COPY.reelLabel(reelNumber)}</span>
+      <span className="tabular-nums">{reelNumber === null ? 'Pitch' : COPY.reelLabel(reelNumber)}</span>
       <span aria-hidden="true" className="text-ink-dim">·</span>
       <span className="tabular-nums">{COPY.takeLabel(take, maxGuesses)}</span>
     </h2>

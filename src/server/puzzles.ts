@@ -24,7 +24,7 @@ export interface ResolvedTarget {
 }
 
 const NUMBER_RE = /^\d{1,6}$/;
-const SLUG_RE = /^[0-9a-z]{1,64}$/;
+const SLUG_RE = /^[A-Za-z0-9_-]{1,512}$/;
 
 const NOT_FOUND = 'Puzzle not found.';
 

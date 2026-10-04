@@ -7,7 +7,8 @@ export const PLAY_KINDS = ['daily', 'vault', 'pitch'] as const satisfies readonl
 export const HINT_TYPES = Object.keys(HINT_TYPE_LABELS) as [HintType, ...HintType[]];
 
 export const kindSchema = z.enum(PLAY_KINDS);
-export const refSchema = z.string().trim().min(1).max(64);
+// Puzzle numbers, 8 char pitch slugs, or keyless-mode opaque pitch tokens (base64url, 9.1 item 17).
+export const refSchema = z.string().trim().min(1).max(512);
 
 export const targetSchema = z.object({ kind: kindSchema, ref: refSchema });
 
