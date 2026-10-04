@@ -118,8 +118,12 @@ export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, titl
         </p>
 
         {state.phase === 'loading' ? (
-          <div className="mt-6 flex min-h-[96px] items-center justify-center border border-dashed border-rule">
-            <Spinner label="Loading the reel" showLabel />
+          // Reserve roughly the height of the search, Script Notes and empty takes so the page does
+          // not jump (CLS) when the play state arrives.
+          <div className="mt-6 min-h-[420px]" data-testid="board-loading">
+            <div className="flex min-h-[96px] items-center justify-center border border-dashed border-rule">
+              <Spinner label="Loading the reel" showLabel />
+            </div>
           </div>
         ) : state.phase === 'error' ? (
           <div role="alert" className="mt-6 border border-rule bg-surface p-5">
