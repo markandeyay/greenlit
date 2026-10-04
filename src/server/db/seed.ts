@@ -4,6 +4,7 @@ import type { Film, FilmAward, Hint, Person, Puzzle } from '@/lib/types';
 import { HINT_CANDIDATES_PER_PUZZLE, LAUNCH_DATE, SCHEDULING } from '@/config/game';
 import { addDays, dateInResetZone, daysBetween } from '@/lib/dates';
 import type { LibrarySnapshot } from './repo';
+import { generateHints } from '@/server/admin/hints-draft';
 
 /** Small deterministic PRNG (mulberry32). */
 function rng(seed: number) {
@@ -19,7 +20,7 @@ function rng(seed: number) {
 
 export type HintGenerator = (film: Film, lib: LibrarySnapshot) => Hint[];
 
-/** Simple fallback generator. WS8's generator (scripts/schedule/generate-hints) can replace it. */
+/** Simple fallback generator (kept for tests). The default is WS8 generateHints (src/server/admin/hints-draft.ts). */
 export const defaultHintGenerator: HintGenerator = (film, lib) => {
   const out: Hint[] = [];
   const people = new Map<number, Person>(lib.people.map((p) => [p.id, p]));
@@ -51,7 +52,7 @@ export function buildDefaultSchedule(
   opts: { now?: Date; launch?: string; generator?: HintGenerator } = {},
 ): Puzzle[] {
   const launch = opts.launch ?? LAUNCH_DATE;
-  const generator = opts.generator ?? defaultHintGenerator;
+  const generator = opts.generator ?? generateHints;
   const eligible = lib.films
     .filter((f) => f.isAnswerEligible && f.boxOfficeUsd !== null)
     .sort((a, b) => a.id - b.id);
