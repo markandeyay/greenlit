@@ -65,6 +65,9 @@ test.describe('Release Order', () => {
     await expect(page.getByTestId('ro-attempt')).toHaveCount(1);
     await expect(page.getByTestId('ro-take')).toHaveText(COPY.takeLabel(2, RELEASE_ORDER.maxAttempts));
     await expect(page.getByTestId('ro-attempt').first()).toContainText('0 in the right slot');
+    // Per slot chips: glyph plus words on every row, none right.
+    await expect(page.getByTestId('ro-chip')).toHaveCount(RELEASE_ORDER.filmsPerSet);
+    await expect(page.getByTestId('ro-chip').filter({ hasText: 'Right spot' })).toHaveCount(0);
 
     // Nothing date-like reached the browser before the round ended.
     const text = await page.locator('main').innerText();
@@ -83,12 +86,18 @@ test.describe('Release Order', () => {
     await expect(page.getByTestId('ro-result')).toContainText(COPY.winStamp);
     const reveal = page.getByTestId('ro-reveal');
     await expect(reveal.getByTestId('ro-reveal-date').first()).toContainText(String(truth[0]!.releaseYear));
-    const preview = page.getByTestId('ro-share-preview');
-    await expect(preview).toContainText(`${APP_NAME} · Release Order ·`);
-    await expect(preview).toContainText('· 2/3');
-    await expect(preview).toContainText('🟩🟩🟩🟩🟩');
-    await expect(preview).toContainText('/modes/release-order');
-    for (const f of served) await expect(preview).not.toContainText(f.title);
+    // The share artifact's emoji text rides on the panel wrapper whatever the panel renders.
+    const share = page.getByTestId('ro-share');
+    await expect(share).toBeVisible();
+    const shared = (await share.getAttribute('data-share-text')) ?? '';
+    expect(shared).toContain(`${APP_NAME} · Release Order ·`);
+    expect(shared).toContain('· 2/3');
+    expect(shared).toContain('🟩🟩🟩🟩🟩');
+    expect(shared).toContain('/modes/release-order');
+    for (const f of served) {
+      expect(shared).not.toContain(f.title);
+      expect(shared).not.toContain(String(f.releaseYear));
+    }
     if (test.info().project.name === 'mobile') await noHorizontalScroll(page);
 
     // Reload: the round stays finished (one round per player per day).

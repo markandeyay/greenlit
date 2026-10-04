@@ -1,14 +1,18 @@
 'use client';
 // Casting Call client island (WS9). Every move goes to the server, which validates it against the
 // cast graph and returns the new state. The optimal chain arrives only with a finished state.
+// Layout (design brief v2): the chain card on top, then one picker at a time (film, then castmate).
+import '@/components/game/game.css';
+import { recordLocalPlay } from '@/lib/local-stats';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { COPY } from '@/config/brand';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/Dialog';
-import { Panel } from '@/components/ui/Panel';
 import { Spinner } from '@/components/ui/Spinner';
-import { Tag } from '@/components/ui/Tag';
+import { StatusGlyph } from '@/components/ui/StatusGlyph';
+import { cx } from '@/components/ui/cx';
 import { useToast } from '@/components/ui/Toast';
+import { Poster } from '@/components/game/Poster';
 import { plural } from '@/lib/format';
 import type { ApiError } from '@/lib/types';
 import type { CastingCallState, CastingOptionFilm } from '@/server/modes/casting-call/types';
@@ -16,7 +20,6 @@ import { CastingBoard } from './CastingBoard';
 import { CastingResult } from './CastingResult';
 import { Headshot } from './Headshot';
 import { OptionPicker, type PickerOption } from './OptionPicker';
-import { shortDay } from './shareText';
 
 const API = '/api/modes/casting-call';
 
@@ -34,8 +37,20 @@ async function request(path: string, body?: unknown): Promise<CastingCallState> 
   return data;
 }
 
-function onwardNote(n: number): string {
-  return n === 0 ? 'no other films' : `${plural(n, 'other film')}`;
+/** "Films used 2 / 6" with one pip per allowed film. */
+function FilmsMeter({ used, max }: { used: number; max: number }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-sm font-semibold tabular-nums" data-testid="cc-links">
+        Films used {used} / {max}
+      </span>
+      <span aria-hidden="true" className="flex gap-1">
+        {Array.from({ length: max }, (_, i) => (
+          <span key={i} className={cx('h-2 w-5 rounded-full', i < used ? 'bg-ink' : 'bg-ink-faint')} />
+        ))}
+      </span>
+    </div>
+  );
 }
 
 export function CastingCallGame({ initial }: { initial: CastingCallState | null }) {
@@ -70,11 +85,14 @@ export function CastingCallGame({ initial }: { initial: CastingCallState | null 
     else if (target === 'result') resultRef.current?.focus();
   });
 
+  // Record the finished round on this device once (the /modes hub shows "Played today").
+  useEffect(() => {
+    if (!state || state.status === 'in_progress') return;
+    recordLocalPlay({ kind: 'casting_call', ref: state.date, status: state.status, takes: state.chain.length, hintsUsed: 0, finishedAt: new Date().toISOString() });
+  }, [state]);
+
   const current = state ? (state.chain.length ? state.chain[state.chain.length - 1]!.person : state.start) : null;
-  const film: CastingOptionFilm | null = useMemo(
-    () => state?.options?.find((f) => f.id === filmId) ?? null,
-    [state, filmId],
-  );
+  const film: CastingOptionFilm | null = useMemo(() => state?.options?.find((f) => f.id === filmId) ?? null, [state, filmId]);
   const finalLink = state ? state.chain.length === state.maxLinks - 1 : false;
 
   const filmOptions: PickerOption[] = useMemo(
@@ -83,6 +101,7 @@ export function CastingCallGame({ initial }: { initial: CastingCallState | null 
         id: f.id,
         label: f.title,
         keywords: String(f.year),
+        thumb: <Poster title={f.title} year={f.year} posterPath={f.posterPath} size="xs" />,
         meta: `${f.year} · ${plural(f.cast.length, 'castmate')}`,
       })),
     [state],
@@ -93,16 +112,19 @@ export function CastingCallGame({ initial }: { initial: CastingCallState | null 
     return film.cast.map((p) => {
       const isEnd = p.id === state.end.id;
       const deadEnd = !isEnd && p.onward === 0;
-      const note = p.used ? 'already on the call sheet' : deadEnd ? 'no other films' : undefined;
+      const note = p.used ? 'already in your chain' : deadEnd ? 'no other films' : undefined;
       return {
         id: p.id,
         label: p.name,
         thumb: <Headshot name={p.name} profilePath={p.profilePath} size="sm" />,
-        meta: (
-          <>
-            {p.billing === 'lead' ? 'Lead' : 'Supporting'}
-            {isEnd ? ' · your end actor' : p.used || deadEnd ? '' : ` · ${onwardNote(p.onward)}`}
-          </>
+        meta: isEnd ? (
+          <span className="inline-flex items-center gap-1 font-semibold text-ink">
+            <StatusGlyph verdict="match" /> Your goal
+          </span>
+        ) : p.used || deadEnd ? (
+          p.billing === 'lead' ? 'Lead' : 'Supporting'
+        ) : (
+          `${p.billing === 'lead' ? 'Lead' : 'Supporting'} · in ${plural(p.onward, 'other film')}`
         ),
         disabled: p.used || deadEnd,
         note,
@@ -138,8 +160,8 @@ export function CastingCallGame({ initial }: { initial: CastingCallState | null 
       setFilmId(null);
       const p = s.chain[s.chain.length - 1]?.person;
       const used = plural(s.chain.length, 'film');
-      if (s.status === 'won') setAnnounce(`${p?.name} cast via ${f.title}. Wrapped in ${used}.`);
-      else if (s.status === 'lost') setAnnounce(`${p?.name} cast via ${f.title}. Out of links.`);
+      if (s.status === 'won') setAnnounce(`${p?.name} cast via ${f.title}. Connected in ${used}.`);
+      else if (s.status === 'lost') setAnnounce(`${p?.name} cast via ${f.title}. Out of films.`);
       else setAnnounce(`${p?.name} cast via ${f.title}. ${s.chain.length} of ${s.maxLinks} films used.`);
       focusNext.current = s.status === 'in_progress' ? 'film' : 'result';
     });
@@ -150,151 +172,131 @@ export function CastingCallGame({ initial }: { initial: CastingCallState | null 
     if (!state) return;
     void run('/giveup', { date: state.date }, () => {
       setFilmId(null);
-      setAnnounce('Round ended. The optimal chain is on the call sheet.');
+      setAnnounce('Round ended. The optimal chain is shown.');
       focusNext.current = 'result';
     });
   };
 
   if (!state) {
     return (
-      <Panel variant="sheet" head={<span>Casting call</span>}>
+      <div className="rounded-[var(--radius-lg)] border border-rule bg-surface p-5">
         {loadError ? (
-          <p className="text-ink-dim">The casting office is closed right now. Reload to try again.</p>
+          <p className="text-ink-dim">Today&apos;s pair did not load. Reload to try again.</p>
         ) : (
           <p className="flex items-center gap-3 text-ink-dim">
-            <Spinner /> Pulling the call sheet
+            <Spinner /> Loading today&apos;s pair
           </p>
         )}
-      </Panel>
+      </div>
     );
   }
 
   const inProgress = state.status === 'in_progress';
   const used = state.chain.length;
 
-  return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:items-start">
-      <div className="flex min-w-0 flex-col gap-6">
-        <Panel
-          variant="sheet"
-          aria-label="Call sheet"
-          head={
-            <span className="flex w-full flex-wrap items-center justify-between gap-2">
-              <span>Call sheet · {shortDay(state.date)}</span>
-              <span className="tabular-nums" data-testid="cc-links">
-                Films {used} / {state.maxLinks}
-              </span>
-            </span>
-          }
-        >
-          <CastingBoard
-            label={`Your chain from ${state.start.name} to ${state.end.name}`}
-            start={state.start}
-            end={state.end}
-            chain={state.chain}
-            showWanted={inProgress || state.status === 'lost'}
-            pending={
-              inProgress && film ? (
-                <li className="flex items-center gap-3 py-1.5 pr-3 pl-12 sm:pl-14" data-row="pending">
-                  <span aria-hidden="true" className="h-6 w-px shrink-0 border-l border-dashed border-rule" />
-                  <span className="ty-micro text-ink-dim">Film {used + 1}</span>
-                  <span className="min-w-0 truncate font-mono text-sm">
-                    via {film.title} ({film.year})
-                  </span>
-                </li>
-              ) : null
-            }
-          />
-        </Panel>
-
-        {inProgress && current ? (
-          <section aria-labelledby="cc-next" className="flex flex-col gap-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h2 id="cc-next" className="ty-display text-[length:var(--t-d3)]">
-                {film ? 'Cast the next actor' : 'Pick a film'}
-              </h2>
-              {finalLink ? <Tag tone="solid">Final link</Tag> : null}
-            </div>
-            {!film ? (
-              <OptionPicker
-                testId="cc-film-picker"
-                label={`Films featuring ${current.name}`}
-                placeholder="Search their films"
-                options={filmOptions}
-                onSelect={chooseFilm}
-                busy={busy}
-                inputRef={filmInput}
-                emptyText="No unused films left for this actor. Walk away to see the optimal chain."
-              />
-            ) : (
-              <>
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius)] border border-rule bg-surface px-3 py-2">
-                  <span className="min-w-0">
-                    <span className="ty-label block">Film {used + 1}</span>
-                    <span className="block truncate">
-                      {film.title} <span className="text-ink-dim">({film.year})</span>
-                    </span>
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setFilmId(null);
-                      focusNext.current = 'film';
-                    }}
-                    disabled={busy}
-                  >
-                    Change film
-                  </Button>
-                </div>
-                <OptionPicker
-                  testId="cc-actor-picker"
-                  label={`Cast of ${film.title}`}
-                  placeholder="Search the cast"
-                  options={actorOptions}
-                  onSelect={chooseActor}
-                  busy={busy}
-                  inputRef={actorInput}
-                  emptyText="Nobody else is billed in this film."
-                />
-              </>
-            )}
-            {busy ? (
-              <p className="flex items-center gap-2 text-ink-dim">
-                <Spinner /> Checking the cast list
-              </p>
-            ) : null}
-          </section>
-        ) : null}
-
-        {!inProgress && state.result ? <CastingResult state={state} headingRef={resultRef} /> : null}
+  const board = (
+    <section aria-label="Your chain" className="rounded-[var(--radius-lg)] border border-rule bg-surface p-3 shadow-[var(--shadow-sm)] sm:p-4">
+      <div className="px-2 pb-2">
+        <FilmsMeter used={used} max={state.maxLinks} />
       </div>
+      <CastingBoard
+        label={`Your chain from ${state.start.name} to ${state.end.name}`}
+        start={state.start}
+        end={state.end}
+        chain={state.chain}
+        showWanted={inProgress || state.status === 'lost'}
+        pending={
+          inProgress ? (
+            film ? (
+              <>
+                in <span className="font-semibold text-ink">{film.title}</span>, then who?
+              </>
+            ) : (
+              'pick a film'
+            )
+          ) : (
+            'no connection'
+          )
+        }
+      />
+    </section>
+  );
 
-      <aside className="flex flex-col gap-4" aria-label="Casting notes">
-        <Panel variant="raised" head={<span>Casting notes</span>}>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-            <dt className="ty-label">Start</dt>
-            <dd className="m-0">{state.start.name}</dd>
-            <dt className="ty-label">End</dt>
-            <dd className="m-0">{state.end.name}</dd>
-            <dt className="ty-label">Now</dt>
-            <dd className="m-0">{inProgress && current ? current.name : state.status === 'won' ? COPY.winStamp : 'Wrapped'}</dd>
-            <dt className="ty-label">Films</dt>
-            <dd className="m-0 tabular-nums">
-              {used} of {state.maxLinks}
-            </dd>
-          </dl>
-          <p className="mt-4 text-sm text-ink-dim">
-            Pick a film the current actor is billed in, then an actor from that film. Reach the end actor in as few
-            films as you can. Links are final.
-          </p>
-        </Panel>
-        {inProgress ? (
-          <Button variant="ghost" onClick={() => setConfirmGiveUp(true)} disabled={busy}>
-            {COPY.giveUp}
-          </Button>
-        ) : null}
-      </aside>
+  return (
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
+      {!inProgress && state.result ? (
+        <CastingResult state={state} headingRef={resultRef}>
+          {board}
+        </CastingResult>
+      ) : (
+        board
+      )}
+
+      {inProgress && current ? (
+        <section aria-labelledby="cc-next" className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="cc-next" className="text-xl leading-tight font-bold">
+              {film ? (
+                <>
+                  Pick a castmate from <span className="italic">{film.title}</span>
+                </>
+              ) : (
+                <>Pick a film with {current.name}</>
+              )}
+            </h2>
+            {film ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setFilmId(null);
+                  focusNext.current = 'film';
+                }}
+                disabled={busy}
+              >
+                Back
+              </Button>
+            ) : finalLink ? (
+              <span className="shrink-0 rounded-full border border-ink px-2.5 py-1 text-xs font-bold">Last film</span>
+            ) : null}
+          </div>
+          {!film ? (
+            <OptionPicker
+              testId="cc-film-picker"
+              label={`Films with ${current.name}`}
+              hideLabel
+              placeholder={`Search ${plural(filmOptions.length, 'film')}`}
+              options={filmOptions}
+              onSelect={chooseFilm}
+              busy={busy}
+              inputRef={filmInput}
+              emptyText="No unused films left for this actor. Walk away to see the optimal chain."
+            />
+          ) : (
+            <OptionPicker
+              testId="cc-actor-picker"
+              label={`Cast of ${film.title}`}
+              hideLabel
+              placeholder="Search the cast"
+              options={actorOptions}
+              onSelect={chooseActor}
+              busy={busy}
+              inputRef={actorInput}
+              emptyText="Nobody else is billed in this film."
+            />
+          )}
+          {busy ? (
+            <p className="flex items-center gap-2 text-ink-dim">
+              <Spinner /> Checking the cast list
+            </p>
+          ) : null}
+          <div className="flex justify-center pt-2">
+            <Button variant="ghost" size="sm" onClick={() => setConfirmGiveUp(true)} disabled={busy}>
+              {COPY.giveUp}
+            </Button>
+          </div>
+        </section>
+      ) : null}
 
       <p className="sr-only" aria-live="polite" data-testid="cc-announce">
         {announce}

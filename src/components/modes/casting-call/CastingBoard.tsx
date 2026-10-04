@@ -1,68 +1,51 @@
-// The casting board: a chain laid out like a call sheet. Actor rows (headshot, name, role) are
-// joined by film rows ("via Heat, 1995"). The end actor row is a dashed "wanted" slot until the
-// chain reaches it; then it fills with the match token and a check glyph (never color alone).
+// The chain: a vertical line of actor portraits joined by "in <film>" connectors. The end actor is
+// a dashed goal slot until the chain reaches it; then it fills with the match token and a check
+// glyph plus the word "Connected" (never color alone).
 import type { ReactNode } from 'react';
 import { StatusGlyph } from '@/components/ui/StatusGlyph';
-import { Tag } from '@/components/ui/Tag';
 import { cx } from '@/components/ui/cx';
-import { pad2 } from '@/lib/format';
 import type { CastingLink, CastingPerson } from '@/server/modes/casting-call/types';
 import { Headshot } from './Headshot';
 
-function ActorRow({
-  n,
-  role,
-  person,
-  state,
-  note,
-}: {
-  n: number;
-  role: string;
-  person: CastingPerson;
-  state: 'cast' | 'wanted' | 'wrapped';
-  note?: ReactNode;
-}) {
-  const wrapped = state === 'wrapped';
+type NodeState = 'cast' | 'goal' | 'connected';
+
+function ActorNode({ role, person, state }: { role: string; person: CastingPerson; state: NodeState }) {
   return (
     <li
       className={cx(
-        'flex items-center gap-3 px-3 py-3 sm:gap-4 sm:px-4',
-        state === 'wanted' && 'border border-dashed border-rule',
-        wrapped && 'gl-status',
+        'flex items-center gap-3 rounded-[var(--radius)] p-2',
+        state === 'goal' && 'border-[1.5px] border-dashed border-ink-faint',
+        state === 'connected' && 'gl-status',
       )}
-      data-verdict={wrapped ? 'match' : undefined}
+      data-verdict={state === 'connected' ? 'match' : undefined}
       data-row="actor"
       data-person-id={person.id}
     >
-      <span className="ty-num w-6 shrink-0 text-sm opacity-70" aria-hidden="true">
-        {pad2(n)}
+      <span className="flex w-12 shrink-0 justify-center">
+        <Headshot name={person.name} profilePath={person.profilePath} className={state === 'goal' ? 'opacity-75' : undefined} />
       </span>
-      <Headshot name={person.name} profilePath={person.profilePath} className={state === 'wanted' ? 'opacity-70' : undefined} />
       <span className="min-w-0 flex-1">
-        <span className="ty-label block">{role}</span>
-        <span className="block truncate text-lg font-semibold">{person.name}</span>
-        {note ? <span className="ty-micro block opacity-80">{note}</span> : null}
+        <span className="block text-[11px] font-bold tracking-[0.08em] uppercase opacity-70">{role}</span>
+        <span className="block text-[17px] leading-tight font-semibold break-words">{person.name}</span>
       </span>
-      {wrapped ? (
-        <span className="flex shrink-0 items-center gap-1">
+      {state === 'connected' ? (
+        <span className="flex shrink-0 items-center gap-1 pr-1 text-sm font-bold">
           <StatusGlyph verdict="match" />
-          <span className="ty-label">Wrapped</span>
+          <span>Connected</span>
         </span>
-      ) : state === 'wanted' ? (
-        <Tag tone="dim">Wanted</Tag>
       ) : null}
     </li>
   );
 }
 
-function FilmRow({ link, index }: { link: CastingLink; index: number }) {
+/** The vertical line between two actors, carrying the film that links them. */
+function Connector({ children, dashed = false, row, filmId }: { children: ReactNode; dashed?: boolean; row: 'film' | 'pending'; filmId?: number }) {
   return (
-    <li className="flex items-center gap-3 py-1.5 pr-3 pl-12 sm:pl-14" data-row="film" data-film-id={link.film.id}>
-      <span aria-hidden="true" className="h-6 w-px shrink-0 bg-rule" />
-      <span className="ty-micro text-ink-dim">Film {index + 1}</span>
-      <span className="min-w-0 truncate font-mono text-sm">
-        via <span className="text-ink">{link.film.title}</span> <span className="text-ink-dim">({link.film.year})</span>
+    <li className="flex items-stretch gap-3 px-2" data-row={row} data-film-id={filmId}>
+      <span aria-hidden="true" className="flex w-12 shrink-0 justify-center">
+        <span className={cx('w-0 border-l-2', dashed ? 'border-dashed border-ink-faint' : 'border-ink')} />
       </span>
+      <span className="flex min-h-9 min-w-0 flex-1 items-center py-1 text-[15px]">{children}</span>
     </li>
   );
 }
@@ -71,33 +54,38 @@ export interface CastingBoardProps {
   start: CastingPerson;
   end: CastingPerson;
   chain: CastingLink[];
-  /** Show the dashed "wanted" end row when the chain has not reached the end actor. */
+  /** Show the dashed goal slot when the chain has not reached the end actor. */
   showWanted?: boolean;
   label: string;
-  /** Extra row content after the current actor (e.g. the "next link" slot). */
+  /** Text for the open connector after the current actor (e.g. "Pick a film"). */
   pending?: ReactNode;
 }
 
 export function CastingBoard({ start, end, chain, showWanted = true, label, pending }: CastingBoardProps) {
   const reached = chain.length > 0 && chain[chain.length - 1]!.person.id === end.id;
   return (
-    <ol aria-label={label} className="flex flex-col gap-1">
-      <ActorRow n={1} role="Start" person={start} state="cast" />
+    <ol aria-label={label} className="flex flex-col">
+      <ActorNode role="Start" person={start} state="cast" />
       {chain.map((l, i) => {
         const isEnd = l.person.id === end.id;
         return [
-          <FilmRow key={`f-${l.film.id}`} link={l} index={i} />,
-          <ActorRow
-            key={`p-${l.person.id}`}
-            n={i + 2}
-            role={isEnd ? 'End' : `Link ${i + 1}`}
-            person={l.person}
-            state={isEnd ? 'wrapped' : 'cast'}
-          />,
+          <Connector key={`f-${l.film.id}`} row="film" filmId={l.film.id}>
+            <span className="min-w-0">
+              <span className="text-ink-dim">in </span>
+              <span className="font-semibold">{l.film.title}</span> <span className="text-ink-dim tabular-nums">({l.film.year})</span>
+            </span>
+          </Connector>,
+          <ActorNode key={`p-${l.person.id}`} role={isEnd ? 'End' : `Link ${i + 1}`} person={l.person} state={isEnd ? 'connected' : 'cast'} />,
         ];
       })}
-      {!reached && pending ? pending : null}
-      {!reached && showWanted ? <ActorRow n={chain.length + 2} role="End" person={end} state="wanted" note="Reach this actor to wrap" /> : null}
+      {!reached && showWanted ? (
+        <>
+          <Connector dashed row="pending">
+            <span className="text-ink-dim">{pending ?? '...'}</span>
+          </Connector>
+          <ActorNode role="Goal" person={end} state="goal" />
+        </>
+      ) : null}
     </ol>
   );
 }

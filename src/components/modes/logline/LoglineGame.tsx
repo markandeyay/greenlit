@@ -1,19 +1,19 @@
 'use client';
 
 import '@/components/game/game.css';
+import { recordLocalPlay } from '@/lib/local-stats';
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
-import { COPY, SITE_URL } from '@/config/brand';
-import { pad2 } from '@/lib/format';
+import { COPY } from '@/config/brand';
 import type { ApiError, SearchResult } from '@/lib/types';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
+import { StatusGlyph } from '@/components/ui/StatusGlyph';
 import { cx } from '@/components/ui/cx';
-import { useToast } from '@/components/ui/Toast';
 import { SearchBox } from '@/components/game/SearchBox';
 import { Poster } from '@/components/game/Poster';
-import { canUseNativeShare, copyText, nativeShare, xIntentUrl } from '@/components/share/shareActions';
+import { ShareArtifactPanel } from '@/components/share';
 import { ScriptPage } from './ScriptPage';
-import { buildLoglineShare, LOGLINE_SHARE_PATH } from './share';
+import { buildLoglineArtifact } from './share';
 import type { LoglineStateResponse } from './types';
 
 const API = '/api/modes/logline';
@@ -77,9 +77,15 @@ export function LoglineGame({ initial }: LoglineGameProps) {
     if (live) resultRef.current?.focus();
   }, [live]);
 
+  // Record the finished round on this device once (the /modes hub shows "Played today").
+  useEffect(() => {
+    if (!state || state.status === 'in_progress') return;
+    recordLocalPlay({ kind: 'logline', ref: state.date, status: state.status, takes: state.guesses.length, hintsUsed: 0, finishedAt: new Date().toISOString() });
+  }, [state]);
+
   if (!state) {
     return (
-      <div className="mt-8 flex items-center gap-3 font-mono text-ink-dim" role="status">
+      <div className="flex items-center gap-3 text-ink-dim" role="status">
         {error ? (
           <>
             <span>{error}</span>
@@ -95,7 +101,7 @@ export function LoglineGame({ initial }: LoglineGameProps) {
           </>
         ) : (
           <>
-            <Spinner label="Loading" /> Threading the script...
+            <Spinner label="Loading" /> Loading today&apos;s logline
           </>
         )}
       </div>
@@ -104,6 +110,7 @@ export function LoglineGame({ initial }: LoglineGameProps) {
 
   const finished = state.status !== 'in_progress';
   const tiers = finished && state.reveal ? state.reveal.tiers : state.tiers;
+  const take = Math.min(state.take + 1, state.maxTakes);
   const announce = finished
     ? ''
     : state.take === 0
@@ -111,85 +118,56 @@ export function LoglineGame({ initial }: LoglineGameProps) {
       : `Missed. Draft ${state.tiers.length} of ${state.totalTiers}: ${state.tiers[state.tiers.length - 1] ?? ''}`;
 
   return (
-    <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-      <div className="min-w-0 space-y-6">
-        <TakeStrip state={state} />
-        <ScriptPage tiers={tiers} totalTiers={state.totalTiers} freshIndex={freshIndex} finished={finished} />
-        <p className="sr-only" aria-live="polite">
-          {announce}
-        </p>
-        {finished ? (
-          <Result state={state} live={live} headingRef={resultRef} />
-        ) : (
-          <SearchBox label="Name the film" onSelect={onSelect} guessedIds={guessedIds} busy={busy} />
-        )}
-        {error ? (
-          <p role="alert" className="font-mono text-[13px] text-ink">
-            {error}
+    <div className="flex flex-col gap-5">
+      {finished ? <Result state={state} live={live} headingRef={resultRef} /> : null}
+      <ScriptPage tiers={tiers} totalTiers={state.totalTiers} freshIndex={freshIndex} finished={finished} />
+      <p className="sr-only" aria-live="polite">
+        {announce}
+      </p>
+      {finished ? null : (
+        <div className="relative">
+          <p className="absolute top-0 right-0 text-sm font-semibold tabular-nums" data-testid="logline-take">
+            Take {take} of {state.maxTakes}
           </p>
-        ) : null}
-      </div>
+          <SearchBox label="Name the film" onSelect={onSelect} guessedIds={guessedIds} busy={busy} />
+        </div>
+      )}
+      {error ? (
+        <p role="alert" className="text-sm text-ink">
+          {error}
+        </p>
+      ) : null}
       <TakeList state={state} />
     </div>
   );
 }
 
-/** TAKE n / 6 plus one slot per take. Each used slot carries a glyph and words, not only color. */
-function TakeStrip({ state }: { state: LoglineStateResponse }) {
-  const finished = state.status !== 'in_progress';
-  const current = finished ? state.take : Math.min(state.take + 1, state.maxTakes);
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <p className="ty-label text-ink" data-testid="logline-take">
-        {COPY.takeLabel(current, state.maxTakes)}
-      </p>
-      <ol className="flex gap-1.5" aria-label="Takes">
-        {Array.from({ length: state.maxTakes }, (_, i) => {
-          const g = state.guesses[i];
-          const label = g ? `Take ${i + 1}: ${g.correct ? 'correct' : 'miss'}` : `Take ${i + 1}: unused`;
-          return (
-            <li
-              key={i}
-              aria-label={label}
-              className={cx(
-                'grid h-7 w-7 place-items-center font-mono text-[13px] font-bold',
-                g ? 'gl-status' : 'border border-dashed border-rule text-ink-dim',
-              )}
-              data-verdict={g ? (g.correct ? 'match' : 'miss') : undefined}
-            >
-              <span aria-hidden="true">{g ? (g.correct ? '✓' : '✕') : ''}</span>
-            </li>
-          );
-        })}
-      </ol>
-    </div>
-  );
-}
-
+/** The player's takes as compact rows: glyph plus word (never color alone), then the title. */
 function TakeList({ state }: { state: LoglineStateResponse }) {
+  if (state.guesses.length === 0) return null;
   return (
-    <aside aria-labelledby="logline-takes-title" className="min-w-0 border border-rule bg-surface">
-      <h2 id="logline-takes-title" className="border-b border-rule px-4 py-2 font-mono text-[11px] font-bold tracking-[0.12em] text-ink-dim uppercase">
-        Takes so far
+    <section aria-labelledby="logline-takes-title" data-testid="logline-guesses">
+      <h2 id="logline-takes-title" className="text-sm font-semibold">
+        Your takes
       </h2>
-      {state.guesses.length === 0 ? (
-        <p className="px-4 py-4 font-mono text-[13px] text-ink-dim">
-          No takes yet. You get {state.maxTakes}. Each miss unlocks a sharper draft.
-        </p>
-      ) : (
-        <ol className="divide-y divide-rule">
-          {state.guesses.map((g, i) => (
-            <li key={g.filmId} className="flex items-baseline gap-3 px-4 py-2.5 font-mono text-[13px]">
-              <span className="flex-none text-ink-dim tabular-nums">Tk {pad2(i + 1)}</span>
-              <span className={cx('min-w-0 flex-1 truncate', !g.correct && 'text-ink-dim line-through')}>
-                {g.title} <span className="tabular-nums">({g.year})</span>
-              </span>
-              <span className="flex-none text-[11px] font-bold tracking-[0.1em] uppercase">{g.correct ? '✓ Got it' : 'Miss'}</span>
-            </li>
-          ))}
-        </ol>
-      )}
-    </aside>
+      <ol className="mt-2 flex flex-col gap-1.5">
+        {state.guesses.map((g, i) => (
+          <li key={g.filmId} className="flex items-center gap-3 rounded-[var(--radius)] border border-rule bg-surface px-3 py-2 text-[15px]">
+            <span
+              className="gl-status inline-flex flex-none items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold"
+              data-verdict={g.correct ? 'match' : 'miss'}
+            >
+              {g.correct ? <StatusGlyph verdict="match" /> : <span aria-hidden="true">✕</span>}
+              {g.correct ? 'Got it' : 'Miss'}
+            </span>
+            <span className={cx('min-w-0 flex-1 truncate', !g.correct && 'text-ink-dim')}>
+              {g.title} <span className="tabular-nums">({g.year})</span>
+            </span>
+            <span className="flex-none text-xs text-ink-dim tabular-nums">Take {i + 1}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
@@ -202,78 +180,56 @@ function Result({
   live: boolean;
   headingRef: RefObject<HTMLHeadingElement | null>;
 }) {
-  const { toast } = useToast();
   const won = state.status === 'won';
   const stamp = won ? COPY.winStamp : COPY.lossStamp;
-  const text = buildLoglineShare(state);
+  const artifact = useMemo(() => buildLoglineArtifact(state), [state]);
   const reveal = state.reveal;
 
-  const copy = async () => {
-    toast((await copyText(text)) ? 'Copied to clipboard' : 'Could not copy. Select the text and copy it by hand.');
-  };
-  const share = async () => {
-    if (!canUseNativeShare()) return copy();
-    const r = await nativeShare({ text, url: `${SITE_URL.replace(/\/$/, '')}${LOGLINE_SHARE_PATH}` });
-    if (r === 'failed') await copy();
-  };
-
   return (
-    <section aria-labelledby="logline-result-title" className={cx('border-[1.5px] border-ink bg-surface', live && 'anim-rise')}>
-      <div className="flex items-center justify-between gap-3 border-b border-rule px-4 py-2 font-mono text-[11px] font-bold tracking-[0.12em] text-ink-dim uppercase sm:px-5">
-        <span className="truncate">INT. THE SCREENING ROOM - NIGHT</span>
-        <span className="flex-none tabular-nums">Tk {pad2(state.take)}</span>
-      </div>
-      <div className="px-4 pt-4 pb-5 sm:px-6">
-        <p
-          aria-hidden="true"
-          className={cx('gm-stamp my-4 ml-1 text-[clamp(26px,7vw,46px)]', won ? 'gm-stamp--win' : 'gm-stamp--loss', live && 'anim-stamp')}
-        >
-          {stamp}
+    <section aria-labelledby="logline-result-title" className={cx('flex flex-col gap-5', live && 'anim-rise')}>
+      <div
+        className={cx('rounded-[var(--radius-lg)] border border-rule p-4 sm:p-5', won ? 'gl-status' : 'bg-surface')}
+        data-verdict={won ? 'match' : undefined}
+      >
+        <p aria-hidden="true" className={cx('ty-display inline-block origin-left py-1 text-[clamp(30px,8vw,48px)] leading-none', live && 'anim-stamp')}>
+          {won ? (
+            <span className="inline-flex items-center gap-3">
+              <StatusGlyph verdict="match" /> {stamp}
+            </span>
+          ) : (
+            stamp
+          )}
         </p>
-        <h2 id="logline-result-title" ref={headingRef} tabIndex={-1} className="ty-display text-[clamp(22px,4vw,30px)] leading-none outline-none">
+        <h2 id="logline-result-title" ref={headingRef} tabIndex={-1} className="mt-3 text-lg leading-snug font-semibold outline-none focus-visible:shadow-none! focus-visible:outline-none!">
           <span className="sr-only">{stamp}. </span>
           {won ? `Sold on take ${state.take}` : 'The script went back to the drawer'}
         </h2>
         {reveal ? (
-          <div className="mt-5 flex items-start gap-4">
+          <div className="mt-4 flex items-center gap-4">
             <Poster title={reveal.title} year={reveal.year} posterPath={reveal.posterPath} size="sm" />
             <div className="min-w-0">
-              <p className="ty-label text-ink-dim">The film</p>
-              <p className="mt-1 text-[20px] font-bold" data-testid="logline-reveal-title">
-                {reveal.title} <span className="font-mono text-[15px] font-normal tabular-nums">({reveal.year})</span>
+              <p className="text-xs font-bold tracking-[0.1em] uppercase opacity-75">The film</p>
+              <p className="mt-0.5 text-[20px] leading-tight font-bold" data-testid="logline-reveal-title">
+                {reveal.title} <span className="text-[15px] font-normal tabular-nums">({reveal.year})</span>
               </p>
-              <p className="mt-3 font-mono text-[14px] leading-relaxed text-ink">{reveal.tiers[reveal.tiers.length - 1]}</p>
             </div>
           </div>
         ) : null}
-
-        <div className="mt-6 border-t border-rule pt-5">
-          <p className="ty-label mb-3 text-ink">Post your take</p>
-          <pre className="overflow-x-auto border border-rule bg-bg px-3 py-2 font-mono text-[13px] whitespace-pre-wrap" data-testid="logline-share-text">
-            {text}
-          </pre>
-          <div className="mt-3 flex flex-wrap gap-3">
-            <Button variant="slate" size="sm" onClick={share}>
-              Share result
-            </Button>
-            <Button variant="outline" size="sm" onClick={copy}>
-              Copy text
-            </Button>
-            <a className="gl-btn gl-btn--ghost gl-btn--sm" href={xIntentUrl(text)} target="_blank" rel="noopener noreferrer">
-              Post to X
-            </a>
-          </div>
-        </div>
-        <nav aria-label="What next" className="mt-5 flex flex-wrap gap-3">
-          <ButtonLink href="/" variant="outline" size="sm">
-            Today&apos;s reel
-          </ButtonLink>
-          <ButtonLink href="/modes" variant="ghost" size="sm">
-            More modes
-          </ButtonLink>
-        </nav>
-        <p className="mt-4 font-mono text-[12px] text-ink-dim">A new logline drops at midnight, New York time.</p>
       </div>
+
+      <div data-testid="logline-share-text" data-share-text={artifact.text} className="max-w-full min-w-0 overflow-x-auto">
+        <ShareArtifactPanel artifact={artifact} heading="Share your take" />
+      </div>
+
+      <nav aria-label="What next" className="grid grid-cols-2 gap-3">
+        <ButtonLink href="/" variant="outline">
+          Today&apos;s reel
+        </ButtonLink>
+        <ButtonLink href="/modes" variant="ghost">
+          More modes
+        </ButtonLink>
+      </nav>
+      <p className="text-center text-sm text-ink-dim">A new logline drops at midnight, New York time.</p>
     </section>
   );
 }

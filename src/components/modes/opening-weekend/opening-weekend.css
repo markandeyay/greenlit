@@ -12,19 +12,75 @@
     transform: translateY(-14px) scale(0.97);
   }
 }
+@keyframes ow-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes ow-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+@keyframes ow-flash {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
 .ow-card-in {
   animation: ow-card-in var(--d2) var(--e-out) both;
 }
 .ow-card-out {
   animation: ow-card-out var(--d1) var(--e-soft) both;
 }
+.ow-pop {
+  animation: ow-pop 320ms var(--e-out) both;
+}
+.ow-shake {
+  animation: ow-shake 360ms var(--e-soft) both;
+}
+.ow-flash {
+  animation: ow-flash var(--d1) var(--e-out) both;
+}
+/* Timer bar: width is driven inline; this only smooths each 200ms tick. */
+.ow-timer-fill {
+  transition: width 200ms linear;
+}
 @media (prefers-reduced-motion: reduce) {
   html:not([data-reduced-motion="off"]) .ow-card-in,
-  html:not([data-reduced-motion="off"]) .ow-card-out {
+  html:not([data-reduced-motion="off"]) .ow-card-out,
+  html:not([data-reduced-motion="off"]) .ow-pop,
+  html:not([data-reduced-motion="off"]) .ow-shake,
+  html:not([data-reduced-motion="off"]) .ow-flash {
     animation: none;
+  }
+  html:not([data-reduced-motion="off"]) .ow-timer-fill {
+    transition: none;
   }
 }
 html[data-reduced-motion="on"] .ow-card-in,
-html[data-reduced-motion="on"] .ow-card-out {
+html[data-reduced-motion="on"] .ow-card-out,
+html[data-reduced-motion="on"] .ow-pop,
+html[data-reduced-motion="on"] .ow-shake,
+html[data-reduced-motion="on"] .ow-flash {
   animation: none;
+}
+html[data-reduced-motion="on"] .ow-timer-fill {
+  transition: none;
 }

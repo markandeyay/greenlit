@@ -82,11 +82,13 @@ test.describe('casting call', () => {
     // The server-rendered first frame carries no optimal chain.
     expect((await page.content()).toLowerCase()).not.toContain('optimalpath');
     await expectNoHorizontalScroll(page);
+    // Game first: the first film row is above the fold, even at 375px.
+    await expect(page.getByTestId('cc-film-picker').getByRole('option').first()).toBeInViewport();
 
     for (const [i, l] of pair.optimal.entries()) {
       await playLinkByPointer(page, l);
       if (i < pair.optimal.length - 1) {
-        await expect(page.getByTestId('cc-links')).toHaveText(`Films ${i + 1} / 6`);
+        await expect(page.getByTestId('cc-links')).toHaveText(`Films used ${i + 1} / 6`);
       }
     }
     // Nothing before the final move mentioned the optimum.
@@ -98,9 +100,17 @@ test.describe('casting call', () => {
     await expect(page.getByTestId('cc-stamp')).toHaveText(new RegExp(COPY.winStamp));
     const n = pair.optimal.length;
     await expect(page.getByTestId('cc-optimal')).toContainText(`Optimal: ${plural(n, 'film')}`);
-    await expect(page.getByTestId('cc-share-preview')).toContainText(`${APP_NAME} · Casting Call · `);
-    await expect(page.getByTestId('cc-share-preview')).toContainText(`${plural(n, 'film')} (optimal ${n})`);
-    await expect(page.getByTestId('cc-share-preview')).toContainText('/modes/casting-call');
+    const share = page.getByTestId('cc-share-preview');
+    const shareText = (await share.getAttribute('data-share-text')) ?? '';
+    expect(shareText).toContain(`${APP_NAME} · Casting Call · `);
+    expect(shareText).toContain(`${plural(n, 'film')} (optimal ${n})`);
+    expect(shareText).toContain('🟩'.repeat(n));
+    expect(shareText).toContain('/modes/casting-call');
+    // Spoiler free: no actor name or film title from the chain in the shared text.
+    for (const l of pair.optimal) {
+      expect(shareText).not.toContain(graph.films.get(l.filmId)!.title);
+      expect(shareText).not.toContain(graph.people.get(l.personId)!.name);
+    }
     await expectNoHorizontalScroll(page);
 
     await page.reload();
@@ -124,7 +134,7 @@ test.describe('casting call', () => {
     }
     expect(first).not.toBeNull();
     await playLinkByKeyboard(page, first!);
-    await expect(page.getByTestId('cc-links')).toHaveText('Films 1 / 6');
+    await expect(page.getByTestId('cc-links')).toHaveText('Films used 1 / 6');
     for (const b of bodies) expect(b.toLowerCase()).not.toContain('optimal');
 
     // Walk away with the keyboard: focus the button, Enter, then confirm.
@@ -144,7 +154,7 @@ test.describe('casting call', () => {
     for (const l of pair.optimal) {
       await expect(optimalBoard.locator(`[data-row="film"][data-film-id="${l.filmId}"]`)).toBeVisible();
     }
-    await expect(page.getByTestId('cc-share-preview')).toContainText(`No connection (optimal ${pair.optimal.length})`);
+    expect(await page.getByTestId('cc-share-preview').getAttribute('data-share-text')).toContain(`No connection (optimal ${pair.optimal.length})`);
   });
 
   test('the server rejects a move outside the cast graph', async ({ page }) => {

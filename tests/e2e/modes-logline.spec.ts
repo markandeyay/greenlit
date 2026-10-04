@@ -63,8 +63,11 @@ test('logline: tiers sharpen per miss, resume after reload, reveal at the end, t
   const rec = recordBodies(page);
   await open(page);
   await expect(tiers(page)).toHaveCount(1);
-  await expect(page.getByTestId('logline-take')).toHaveText(/TAKE 1 \/ 6/);
+  await expect(page.getByTestId('logline-take')).toHaveText('Take 1 of 6');
+  await expect(page.getByTestId('logline-draft')).toHaveText('Draft 1 of 4');
   await expectNoHorizontalScroll(page);
+  // Game first: the logline and the search input are above the fold, even at 375px.
+  await expect(input(page)).toBeInViewport();
 
   let take = 0;
   let won = false;
@@ -72,7 +75,7 @@ test('logline: tiers sharpen per miss, resume after reload, reveal at the end, t
     await guess(page, film);
     take++;
     if (await finished(page).isVisible()) {
-      won = (await page.getByTestId('logline-share-text').textContent())?.includes('🟩') ?? false;
+      won = (await page.getByTestId('logline-share-text').getAttribute('data-share-text'))?.includes('🟩') ?? false;
       break;
     }
     await expect(tiers(page)).toHaveCount(Math.min(LOGLINE.tiers, take + 1));
@@ -80,7 +83,7 @@ test('logline: tiers sharpen per miss, resume after reload, reveal at the end, t
       // Resume: the round survives a reload.
       await page.reload();
       await expect(tiers(page)).toHaveCount(3);
-      await expect(page.getByRole('complementary').getByText(CANDIDATES[0]!.title)).toBeVisible();
+      await expect(page.getByTestId('logline-guesses').getByText(CANDIDATES[0]!.title)).toBeVisible();
     }
   }
   await expect(finished(page)).toBeVisible();
@@ -96,13 +99,13 @@ test('logline: tiers sharpen per miss, resume after reload, reveal at the end, t
 
   // All drafts are shown, and the share text is spoiler free.
   await expect(tiers(page)).toHaveCount(LOGLINE.tiers);
-  const share = (await page.getByTestId('logline-share-text').textContent()) ?? '';
+  const share = (await page.getByTestId('logline-share-text').getAttribute('data-share-text')) ?? '';
   expect(share).not.toContain(title);
   expect(share).toMatch(/· Logline · [A-Z][a-z]{2} \d{1,2} · (\d|X)\/6/);
   expect(share).toContain('/modes/logline');
   if (!won) {
     expect(share).toContain('X/6');
-    expect(share).toContain('🟥'.repeat(LOGLINE.maxTakes));
+    expect(share).toContain('⬛'.repeat(LOGLINE.maxTakes));
   }
   await expectNoHorizontalScroll(page);
   if (won) return; // a candidate happened to be today's film; the win path is covered already
@@ -128,7 +131,7 @@ test('logline: tiers sharpen per miss, resume after reload, reveal at the end, t
   await p2.keyboard.press('Enter');
   await expect(finished(p2)).toBeVisible();
   await expect(p2.getByRole('heading', { name: /Sold on take 1/ })).toBeVisible();
-  const share2 = (await p2.getByTestId('logline-share-text').textContent()) ?? '';
+  const share2 = (await p2.getByTestId('logline-share-text').getAttribute('data-share-text')) ?? '';
   expect(share2).toContain('1/6');
   expect(share2).toContain('🟩');
   await ctx.close();

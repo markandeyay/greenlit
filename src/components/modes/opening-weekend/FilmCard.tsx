@@ -1,6 +1,5 @@
 'use client';
 import { Poster } from '@/components/game/Poster';
-import { Tag } from '@/components/ui/Tag';
 import { cx } from '@/components/ui/cx';
 import { formatBoxOffice, speakBoxOffice } from '@/lib/format';
 import type { OwCard, OwSide } from '@/server/modes/opening-weekend/types';
@@ -14,8 +13,8 @@ export interface CardReveal {
 }
 
 /**
- * One poster in the pair. Before the choice it is a big button; after, it shows its gross with
- * HIGHER / LOWER in words and a check or cross on the player's pick (color is never the only signal).
+ * One poster in the pair. The whole card is the tap target. After the choice it shows its gross
+ * with HIGHER / LOWER in words, and a check or cross on the player's pick (never color alone).
  */
 export function FilmCard({
   film,
@@ -35,12 +34,13 @@ export function FilmCard({
   entering: boolean;
 }) {
   const key = side === 'left' ? '1' : '2';
-  const arrow = side === 'left' ? '←' : '→';
   const label = reveal
     ? `${film.title} (${film.year}) grossed ${speakBoxOffice(reveal.gross)}, ${reveal.higher ? 'higher' : 'lower'}${
         reveal.picked ? `, your pick, ${reveal.correct ? 'correct' : 'wrong'}` : ''
       }`
     : `Pick ${film.title} (${film.year}) as the bigger worldwide gross. Key ${key} or ${side} arrow.`;
+  const good = reveal?.picked && reveal.correct;
+  const bad = reveal?.picked && !reveal.correct;
   return (
     <div className={cx('min-w-0', leaving && 'ow-card-out', entering && 'ow-card-in')}>
       <button
@@ -50,46 +50,55 @@ export function FilmCard({
         aria-label={label}
         data-testid={`ow-card-${side}`}
         data-film-id={film.id}
+        data-result={good ? 'correct' : bad ? 'wrong' : undefined}
         className={cx(
-          'group flex w-full flex-col gap-3 border bg-surface p-2 text-left transition-colors sm:p-3',
+          'ow-card group flex w-full touch-manipulation flex-col gap-2 rounded-[6px] border-2 bg-surface p-1.5 text-left transition-[border-color,transform] sm:p-2',
           'focus-visible:outline-2 focus-visible:outline-offset-2',
-          reveal?.picked && reveal.correct && 'border-green',
-          reveal?.picked && !reveal.correct && 'border-red-rec',
+          good && 'ow-pop border-green',
+          bad && 'ow-shake border-red-rec',
           !reveal?.picked && 'border-rule',
-          !reveal && !disabled && 'hover:border-ink hover:bg-surface-2',
+          !reveal && !disabled && 'hover:border-ink active:scale-[0.98]',
           disabled && !reveal && 'cursor-wait',
         )}
       >
-        <Poster title={film.title} year={film.year} posterPath={film.posterPath} size="lg" className="w-full!" />
-        <span className="block min-w-0">
-          <span className="ty-display block truncate text-[length:var(--t-d3)] leading-none" title={film.title}>
+        <span className="relative block">
+          <Poster title={film.title} year={film.year} posterPath={film.posterPath} size="lg" className="w-full!" />
+          {reveal ? (
+            <span aria-hidden="true" className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-1 bg-ink/85 p-2 text-bg">
+              <span className="font-mono text-[12px] font-bold tracking-[0.12em]">
+                {reveal.higher ? '▲ HIGHER' : '▼ LOWER'}
+              </span>
+              <span className="ty-num text-[clamp(18px,5.4vw,26px)] leading-none font-bold">{formatBoxOffice(reveal.gross)}</span>
+            </span>
+          ) : null}
+          {reveal?.picked ? (
+            <span
+              aria-hidden="true"
+              className={cx(
+                'absolute top-2 right-2 grid h-10 w-10 place-items-center rounded-full border-2 border-bg text-[22px] font-bold shadow-md',
+                reveal.correct ? 'bg-green text-green-ink' : 'bg-red-rec text-white',
+              )}
+            >
+              {reveal.correct ? '✓' : '✗'}
+            </span>
+          ) : null}
+        </span>
+        <span className="block min-w-0 px-0.5 pb-0.5">
+          <span className="line-clamp-2 block text-[15px] leading-tight font-semibold sm:text-[17px]" title={film.title}>
             {film.title}
           </span>
-          <span className="ty-label mt-1 flex items-center justify-between gap-2">
+          <span className="mt-0.5 flex items-center justify-between gap-2 font-mono text-[12px] text-ink-dim">
             <span>{film.year}</span>
-            {!reveal ? (
-              <span aria-hidden="true" className="text-ink-dim">
-                {arrow} / {key}
+            {reveal?.picked ? (
+              <span aria-hidden="true" className="font-bold text-ink">
+                {reveal.correct ? '✓' : '✗'} Your pick
               </span>
-            ) : null}
+            ) : (
+              <span aria-hidden="true" className="hidden sm:inline">
+                Key {key}
+              </span>
+            )}
           </span>
-        </span>
-        <span className="block min-h-[3.25rem]" aria-hidden="true">
-          {reveal ? (
-            <>
-              <span className="flex flex-wrap items-center gap-2">
-                <Tag tone={reveal.higher ? 'solid' : 'line'}>{reveal.higher ? 'HIGHER' : 'LOWER'}</Tag>
-                {reveal.picked ? (
-                  <span className={cx('ty-label', reveal.correct ? 'text-green' : 'text-red-rec')}>
-                    {reveal.correct ? '✓' : '✗'} Your pick
-                  </span>
-                ) : null}
-              </span>
-              <span className="ty-num mt-1 block text-[length:var(--t-lede)]">{formatBoxOffice(reveal.gross)}</span>
-            </>
-          ) : (
-            <span className="ty-label block text-ink-dim">Grossed more?</span>
-          )}
         </span>
       </button>
     </div>

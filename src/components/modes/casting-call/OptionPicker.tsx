@@ -27,6 +27,8 @@ export interface OptionPickerProps {
   inputRef?: RefObject<HTMLInputElement | null>;
   emptyText: string;
   testId?: string;
+  /** Hide the visible label (a heading above already says it); it stays the accessible name. */
+  hideLabel?: boolean;
 }
 
 function matches(o: PickerOption, q: string): boolean {
@@ -35,7 +37,7 @@ function matches(o: PickerOption, q: string): boolean {
   return q.split(' ').every((w) => hay.split(' ').some((h) => h.startsWith(w)));
 }
 
-export function OptionPicker({ label, placeholder, options, onSelect, busy = false, inputRef, emptyText, testId }: OptionPickerProps) {
+export function OptionPicker({ label, placeholder, options, onSelect, busy = false, inputRef, emptyText, testId, hideLabel = false }: OptionPickerProps) {
   const id = useId();
   const listId = `${id}-list`;
   const [query, setQuery] = useState('');
@@ -85,7 +87,7 @@ export function OptionPicker({ label, placeholder, options, onSelect, busy = fal
 
   return (
     <div data-testid={testId}>
-      <label htmlFor={`${id}-input`} className="ty-label block">
+      <label htmlFor={`${id}-input`} className={hideLabel ? 'sr-only' : 'ty-label mb-2 block'}>
         {label}
       </label>
       <input
@@ -108,13 +110,13 @@ export function OptionPicker({ label, placeholder, options, onSelect, busy = fal
           setActive(-1);
         }}
         onKeyDown={onKeyDown}
-        className="mt-2 w-full rounded-[var(--radius)] border border-rule bg-bg px-3 py-2.5 text-ink placeholder:text-ink-dim focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="min-h-11 w-full rounded-full border border-rule bg-surface px-4 py-2 text-base text-ink placeholder:text-ink-dim focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       />
       <ul
         id={listId}
         role="listbox"
         aria-label={label}
-        className="mt-2 max-h-80 overflow-y-auto rounded-[var(--radius)] border border-rule bg-bg"
+        className="mt-3 max-h-[min(26rem,60vh)] overflow-y-auto rounded-[var(--radius-lg)] border border-rule bg-surface shadow-[var(--shadow-sm)]"
       >
         {visible.length === 0 ? (
           <li role="presentation" className="px-3 py-3 text-ink-dim">
@@ -134,17 +136,23 @@ export function OptionPicker({ label, placeholder, options, onSelect, busy = fal
               onMouseEnter={() => !o.disabled && setActive(i)}
               onClick={() => pick(o)}
               className={cx(
-                'flex min-h-11 items-center gap-3 border-b border-rule px-3 py-2 last:border-b-0',
-                o.disabled ? 'cursor-not-allowed text-ink-dim' : 'cursor-pointer',
-                i === activeIdx && 'bg-surface-2 outline-1 -outline-offset-1 outline-ink',
+                'flex min-h-16 items-center gap-3 border-b border-rule px-3 py-2.5 last:border-b-0',
+                o.disabled ? 'cursor-not-allowed text-ink-dim' : 'cursor-pointer hover:bg-surface-2',
+                i === activeIdx && 'bg-surface-2 outline-2 -outline-offset-2 outline-ink',
               )}
             >
               {o.thumb}
               <span className="min-w-0 flex-1">
-                <span className={cx('block truncate', o.disabled && 'line-through')}>{o.label}</span>
-                {o.meta ? <span className="ty-micro block text-ink-dim">{o.meta}</span> : null}
+                <span className={cx('block text-[17px] leading-tight font-semibold break-words', o.disabled && 'font-normal line-through')}>{o.label}</span>
+                {o.meta ? <span className="mt-0.5 block text-sm text-ink-dim">{o.meta}</span> : null}
               </span>
-              {o.disabled && o.note ? <span className="ty-micro shrink-0 text-ink-dim">{o.note}</span> : null}
+              {o.disabled && o.note ? (
+                <span className="shrink-0 text-xs text-ink-dim">{o.note}</span>
+              ) : (
+                <span aria-hidden="true" className="shrink-0 text-xl text-ink-dim">
+                  ›
+                </span>
+              )}
             </li>
           ))
         )}

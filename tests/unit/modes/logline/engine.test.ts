@@ -162,7 +162,7 @@ describe('rules', () => {
     });
     const [head, row, url] = text.split('\n');
     expect(head).toMatch(/ · Logline · Oct 4 · 3\/6$/);
-    expect(row).toBe('🟥🟥🟩');
+    expect(row).toBe('⬛⬛🟩');
     expect(url).toMatch(/\/modes\/logline$/);
     expect(buildLoglineShare({ date: '2026-10-04', status: 'lost', take: 6, maxTakes: 6, guesses: [] })).toContain('X/6');
   });

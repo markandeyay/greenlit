@@ -32,9 +32,11 @@ describe('logline boundaries', () => {
     }
   });
 
-  it('locked drafts render as bars with no text', () => {
-    render(<ScriptPage tiers={['First cryptic draft text here.']} totalTiers={4} />);
+  it('locked drafts render as empty dots with no text', () => {
+    const { container } = render(<ScriptPage tiers={['First cryptic draft text here.']} totalTiers={4} />);
     expect(screen.getAllByTestId('logline-tier')).toHaveLength(1);
-    expect(screen.getAllByText(/locked until a missed take/)).toHaveLength(3);
+    expect(screen.getByTestId('logline-draft')).toHaveTextContent('Draft 1 of 4');
+    expect(container.querySelectorAll('[data-locked]')).toHaveLength(3);
+    for (const el of container.querySelectorAll('[data-locked]')) expect(el.textContent).toBe('');
   });
 });

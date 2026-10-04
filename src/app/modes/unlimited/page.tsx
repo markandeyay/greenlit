@@ -4,7 +4,6 @@
 import type { Metadata } from 'next';
 import { APP_NAME } from '@/config/brand';
 import { RULES } from '@/config/rules';
-import { Breadcrumb } from '@/components/chrome/Breadcrumb';
 import { UnlimitedReel } from '@/components/modes/unlimited/UnlimitedReel';
 import { playerRegion } from '@/lib/game/server-region';
 
@@ -18,10 +17,7 @@ export const metadata: Metadata = {
 export default async function UnlimitedPage() {
   const region = await playerRegion();
   return (
-    <main className="l-page pt-5 pb-16 sm:pt-8">
-      <div className="mb-4">
-        <Breadcrumb items={[{ label: APP_NAME, href: '/' }, { label: 'Modes', href: '/modes' }, { label: 'Dailies Reel' }]} />
-      </div>
+    <main className="l-page pt-4 pb-12 sm:pt-6">
       <UnlimitedReel playerRegion={region} />
     </main>
   );

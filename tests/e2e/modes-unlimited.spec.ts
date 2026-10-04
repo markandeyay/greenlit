@@ -51,7 +51,7 @@ test('dailies reel: roll, play, walk away, resume, next reel', async ({ page }) 
   await guessFilm(page, guess);
   await expect(takeRows(page)).toHaveCount(1);
 
-  const card = page.locator('section').filter({ has: page.getByText('INT. THE SCREENING ROOM - NIGHT') }).first();
+  const card = page.getByTestId('result-card');
   let revealed: { filmId: number; title: string };
   if (await page.getByText(COPY.winStamp, { exact: true }).isVisible()) {
     const last = bodies.filter((b) => b.url.includes('/api/guess')).at(-1)!;

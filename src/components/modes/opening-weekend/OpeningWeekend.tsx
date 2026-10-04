@@ -3,14 +3,14 @@ import './opening-weekend.css';
 import '@/components/game/game.css';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { OPENING_WEEKEND } from '@/config/modes';
-import { SlateMeta } from '@/components/chrome/SlateMeta';
 import { Button } from '@/components/ui/Button';
-import { Panel } from '@/components/ui/Panel';
 import { Spinner } from '@/components/ui/Spinner';
-import { Tag } from '@/components/ui/Tag';
 import { useToast } from '@/components/ui/Toast';
 import { VisuallyHidden } from '@/components/ui/VisuallyHidden';
 import { useIsClient } from '@/components/ui/useIsClient';
+import { cx } from '@/components/ui/cx';
+import { ShareArtifactPanel } from '@/components/share';
+import type { ShareArtifact } from '@/components/share/artifact';
 import { formatBoxOffice } from '@/lib/format';
 import type {
   OwMode,
@@ -23,7 +23,7 @@ import type {
 } from '@/server/modes/opening-weekend/types';
 import { owApi, OwApiError } from './api';
 import { FilmCard, type CardReveal } from './FilmCard';
-import { ShareRow } from './ShareRow';
+import { owArtifact } from './share';
 
 const BEST_KEY = 'gl_ow_best';
 const REVEAL_MS = 650;
@@ -298,7 +298,7 @@ export function OpeningWeekend() {
   };
 
   return (
-    <div className="mt-10">
+    <div className="mt-4">
       <VisuallyHidden as="div">
         <p aria-live="polite" aria-atomic="true">
           {announce}
@@ -308,6 +308,7 @@ export function OpeningWeekend() {
         <RunView
           run={run}
           msLeft={msLeft}
+          totalMs={(status?.seconds ?? OPENING_WEEKEND.dailyRunSeconds) * 1000}
           best={best}
           onPick={pick}
           onAgain={() => void begin('practice')}
@@ -322,9 +323,41 @@ export function OpeningWeekend() {
   );
 }
 
+function TimerBar({ msLeft, totalMs }: { msLeft: number; totalMs: number }) {
+  const pct = Math.max(0, Math.min(100, (msLeft / totalMs) * 100));
+  const low = msLeft <= 10_000;
+  const secs = Math.max(0, Math.ceil(msLeft / 1000));
+  return (
+    <div className="flex items-center gap-3">
+      <div
+        className="relative h-3 flex-1 overflow-hidden rounded-full border border-rule bg-surface-2"
+        role="progressbar"
+        aria-label="Time left"
+        aria-valuemin={0}
+        aria-valuemax={Math.round(totalMs / 1000)}
+        aria-valuenow={secs}
+      >
+        <div
+          className={cx('ow-timer-fill absolute inset-y-0 left-0 rounded-full', low ? 'bg-red-rec' : 'bg-ink')}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p
+        role="timer"
+        aria-label={`${secs} seconds left`}
+        className={cx('ty-num m-0 w-12 text-right font-mono text-[18px] font-bold tabular-nums', low && 'text-red-rec')}
+        data-testid="ow-timer"
+      >
+        {clock(msLeft)}
+      </p>
+    </div>
+  );
+}
+
 function RunView({
   run,
   msLeft,
+  totalMs,
   best,
   onPick,
   onAgain,
@@ -334,6 +367,7 @@ function RunView({
 }: {
   run: Run;
   msLeft: number | null;
+  totalMs: number;
   best: number;
   onPick: (side: OwSide) => void;
   onAgain: () => void;
@@ -342,45 +376,49 @@ function RunView({
   playRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const daily = run.mode === 'daily';
-  const low = msLeft !== null && msLeft <= 10_000;
+  const verdict = run.reveal ? (run.reveal.picked === run.reveal.higher ? 'correct' : 'wrong') : null;
   return (
-    <section aria-label={daily ? 'Daily run' : 'Practice run'} data-testid="ow-run" data-mode={run.mode}>
-      <div className="flex flex-wrap items-end justify-between gap-4 border-y border-rule py-3">
-        <div>
-          <p className="ty-label">{daily ? 'Daily run' : 'Practice'}</p>
-          <p className="ty-display text-[length:var(--t-d3)] leading-none" data-testid="ow-score">
-            <span className="ty-num">{run.score}</span> in a row
-          </p>
+    <section aria-label={daily ? "Today's run" : 'Practice run'} className="mx-auto max-w-xl" data-testid="ow-run" data-mode={run.mode}>
+      <div className="flex items-center justify-between gap-3">
+        <p className="m-0 flex items-baseline gap-2" data-testid="ow-score">
+          <span className="ty-display text-[40px] leading-none tabular-nums">{run.score}</span>{' '}
+          <span className="text-[15px] font-semibold">in a row</span>
+        </p>
+        <p className="m-0 font-mono text-[12px] tracking-[0.1em] text-ink-dim uppercase">
+          {daily ? "Today's run" : `Practice · Best ${best}`}
+        </p>
+      </div>
+      {daily ? (
+        <div className="mt-2">
+          <TimerBar msLeft={msLeft ?? 0} totalMs={totalMs} />
         </div>
-        {daily ? (
-          <div className="text-right">
-            <p className="ty-label">Time</p>
-            <p
-              role="timer"
-              aria-label={`${Math.max(0, Math.ceil((msLeft ?? 0) / 1000))} seconds left`}
-              className={`ty-num text-[length:var(--t-d3)] leading-none ${low ? 'text-red-rec' : ''}`}
-              data-testid="ow-timer"
-            >
-              {clock(msLeft ?? 0)}
-            </p>
-          </div>
+      ) : null}
+
+      <div className="mt-3 flex min-h-9 items-center justify-center">
+        {verdict ? (
+          <p
+            key={`${run.pair.left.id}-${run.pair.right.id}`}
+            className={cx(
+              'ow-flash m-0 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[16px] font-bold',
+              verdict === 'correct' ? 'bg-green text-green-ink' : 'bg-red-rec text-white',
+            )}
+            data-testid="ow-verdict"
+            aria-hidden="true"
+          >
+            {verdict === 'correct' ? '✓ Correct' : '✗ Wrong'}
+          </p>
         ) : (
-          <div className="text-right">
-            <p className="ty-label">Best</p>
-            <p className="ty-num text-[length:var(--t-d3)] leading-none">{best}</p>
-          </div>
+          <h2 className="m-0 text-center text-[18px] font-semibold" id="ow-question">
+            Which made more?
+          </h2>
         )}
       </div>
-
-      <p className="ty-label mt-5 text-center" id="ow-question">
-        Which grossed more worldwide?
-      </p>
       <div
         ref={playRef}
         tabIndex={-1}
-        aria-labelledby="ow-question"
+        aria-label="Which grossed more worldwide?"
         role="group"
-        className="mx-auto mt-3 grid max-w-2xl grid-cols-2 gap-3 outline-none sm:gap-6"
+        className="mx-auto mt-2 grid max-w-xl grid-cols-2 gap-3 outline-none sm:gap-5"
       >
         {(['left', 'right'] as const).map((side) => (
           <FilmCard
@@ -395,19 +433,8 @@ function RunView({
           />
         ))}
       </div>
-      <p className="ty-micro mx-auto mt-3 max-w-2xl text-center text-ink-dim">
-        Press 1 or Left for the left poster, 2 or Right for the right. Worldwide gross, nominal USD.
-      </p>
 
-      {run.over ? (
-        <OverPanel
-          run={run}
-          best={best}
-          onAgain={onAgain}
-          onLobby={onLobby}
-          starting={starting}
-        />
-      ) : null}
+      {run.over ? <OverPanel run={run} best={best} onAgain={onAgain} onLobby={onLobby} starting={starting} /> : null}
     </section>
   );
 }
@@ -429,39 +456,47 @@ function OverPanel({
   useEffect(() => {
     ref.current?.focus();
   }, []);
-  const wrong = run.over?.outcome === 'wrong';
+  const outcome = run.over?.outcome ?? 'wrong';
+  const wrong = outcome === 'wrong';
+  const artifact = owArtifact(run.score, run.mode, run.date, outcome);
   return (
-    <Panel
-      variant="sheet"
-      className="mx-auto mt-8 max-w-2xl"
-      head={<span>{wrong ? 'Run over' : "That's a wrap"}</span>}
+    <section
+      className="mx-auto mt-6 max-w-xl border-t-2 border-ink pt-4"
+      data-testid="ow-over"
+      data-outcome={outcome}
       aria-labelledby="ow-over-title"
     >
-      <div data-testid="ow-over" data-outcome={run.over?.outcome}>
-        <p className="ty-label">{wrong ? '✗ Wrong pick' : 'Time'}</p>
-        <h2 id="ow-over-title" ref={ref} tabIndex={-1} className="ty-display mt-2 text-[length:var(--t-d2)] outline-none">
-          <span className="ty-num" data-testid="ow-final-score">
-            {run.score}
-          </span>{' '}
-          in a row
-        </h2>
-        {run.mode === 'practice' ? <p className="mt-2 text-ink-dim">Best streak: {best}</p> : null}
-        {run.mode === 'daily' ? (
-          <p className="mt-2 text-ink-dim">One daily run per day. The next pairs drop at midnight New York time.</p>
-        ) : null}
-        <div className="mt-5">
-          <ShareRow score={run.score} mode={run.mode} date={run.date} />
-        </div>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Button variant="slate" onClick={onAgain} disabled={starting !== null}>
-            {run.mode === 'practice' ? 'Run it back' : 'Practice run'}
-          </Button>
-          <Button variant="ghost" onClick={onLobby}>
-            Back to the lobby
-          </Button>
-        </div>
+      <p className="m-0 font-mono text-[12px] font-bold tracking-[0.12em] uppercase">
+        {wrong ? '✗ Run over' : "⏱ Time's up"}
+      </p>
+      <h2 id="ow-over-title" ref={ref} tabIndex={-1} className="ty-display m-0 mt-1 text-[44px] leading-none outline-none">
+        <span data-testid="ow-final-score">
+          {run.score}
+        </span>{' '}
+        in a row
+      </h2>
+      <p className="m-0 mt-2 text-ink-dim">
+        {run.mode === 'practice' ? `Best streak: ${best}` : 'One run a day. New pairs at midnight New York time.'}
+      </p>
+      <OwShare artifact={artifact} className="mt-4" />
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        <Button variant="outline" block onClick={onAgain} disabled={starting !== null}>
+          {run.mode === 'practice' ? 'Play again' : 'Practice'}
+        </Button>
+        <Button variant="ghost" block onClick={onLobby}>
+          Back
+        </Button>
       </div>
-    </Panel>
+    </section>
+  );
+}
+
+/** The share card for a run. The wrapper carries the text so tests can check it whatever the panel renders. */
+function OwShare({ artifact, className }: { artifact: ShareArtifact; className?: string }) {
+  return (
+    <div className={cx("min-w-0 [&_pre]:break-words [&_pre]:whitespace-pre-wrap", className)} data-testid="ow-share" data-share-text={artifact.text}>
+      <ShareArtifactPanel artifact={artifact} />
+    </div>
   );
 }
 
@@ -483,57 +518,52 @@ function Lobby({
   const today = status?.today ?? null;
   const seconds = status?.seconds ?? OPENING_WEEKEND.dailyRunSeconds;
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-      <div className="grid gap-6">
-        <Panel variant="raised" head={<span>The daily run</span>} aria-label="The daily run">
-          <SlateMeta roll={status?.date.slice(0, 4)} extra={[`${seconds} sec`, 'Same pairs for everyone']} decorative />
-          <p className="mt-3">
-            {seconds} seconds on the clock. Pick the poster that grossed more worldwide. The winner stays, a new
-            challenger walks in. One wrong pick ends the run. One run per day.
-          </p>
-          <div className="mt-5" data-testid="ow-daily">
-            {!status && !statusError ? (
+    <div className="mx-auto grid max-w-xl gap-6 pt-6">
+      <div className="grid gap-3">
+        <div data-testid="ow-daily">
+          {!status && !statusError ? (
+            <div className="flex min-h-16 items-center justify-center">
               <Spinner label="Loading today's run" />
-            ) : statusError ? (
-              <Button onClick={onRetry}>Try again</Button>
-            ) : today?.finished ? (
-              <div data-testid="ow-daily-done">
-                <p className="ty-display text-[length:var(--t-d3)]">
-                  Today: <span className="ty-num">{today.score}</span> in a row
-                </p>
-                <p className="ty-label mt-1">{today.outcome === 'wrong' ? '✗ Ended on a wrong pick' : 'Ran out the clock'}</p>
-                <div className="mt-4">
-                  <ShareRow score={today.score} mode="daily" date={status!.date} />
-                </div>
-              </div>
-            ) : (
-              <Button variant="slate" size="lg" onClick={() => onStart('daily')} disabled={starting !== null}>
-                {starting === 'daily' ? 'Rolling...' : today ? "Resume today's run" : "Start today's run"}
-              </Button>
-            )}
-          </div>
-        </Panel>
-
-        <Panel variant="flat" head={<span>Practice</span>} aria-label="Practice">
-          <p>Endless pairs, no clock, nothing on the record. Build a streak.</p>
-          <div className="mt-4 flex flex-wrap items-center gap-4">
-            <Button onClick={() => onStart('practice')} disabled={starting !== null}>
-              {starting === 'practice' ? 'Rolling...' : 'Start practice'}
+            </div>
+          ) : statusError ? (
+            <Button block size="lg" onClick={onRetry}>
+              Try again
             </Button>
-            <span className="ty-label" data-testid="ow-best">
-              Best streak <b className="ty-num">{best}</b>
-            </span>
-          </div>
-        </Panel>
+          ) : today?.finished ? (
+            <div data-testid="ow-daily-done">
+              <p className="m-0 font-mono text-[12px] font-bold tracking-[0.12em] uppercase">Today&apos;s run</p>
+              <p className="ty-display m-0 mt-1 text-[40px] leading-none">
+                <span>{today.score}</span> in a row
+              </p>
+              <p className="m-0 mt-1 text-ink-dim">
+                {today.outcome === 'wrong' ? '✗ Ended on a wrong pick.' : '⏱ Ran out the clock.'} Back tomorrow.
+              </p>
+              <OwShare artifact={owArtifact(today.score, 'daily', status!.date, today.outcome)} className="mt-4" />
+            </div>
+          ) : (
+            <Button variant="slate" size="lg" block onClick={() => onStart('daily')} disabled={starting !== null}>
+              {starting === 'daily' ? 'Starting...' : today ? "Resume today's run" : `Today's run (${seconds}s)`}
+            </Button>
+          )}
+        </div>
+        <Button size="lg" block onClick={() => onStart('practice')} disabled={starting !== null}>
+          {starting === 'practice' ? 'Starting...' : 'Practice'}
+        </Button>
+        <p className="m-0 text-center font-mono text-[12px] text-ink-dim" data-testid="ow-best">
+          Best practice streak <b className="ty-num text-ink">{best}</b>
+        </p>
       </div>
 
-      <Panel variant="sheet" head={<span>Today&apos;s top runs</span>} aria-label="Today's top runs">
+      <section aria-labelledby="ow-board-title" className="border-t border-rule pt-4">
+        <h2 id="ow-board-title" className="m-0 font-mono text-[12px] font-bold tracking-[0.12em] uppercase">
+          Today&apos;s top runs
+        </h2>
         {!status ? (
-          <p className="text-ink-dim">{statusError ? 'Board unavailable.' : 'Loading...'}</p>
+          <p className="m-0 mt-2 text-ink-dim">{statusError ? 'Board unavailable.' : 'Loading...'}</p>
         ) : (
           <Board status={status} />
         )}
-      </Panel>
+      </section>
     </div>
   );
 }
@@ -541,27 +571,25 @@ function Lobby({
 function Board({ status }: { status: OwStatusResponse }) {
   const { rows, anonymousCount, totalRuns } = status.board;
   return (
-    <div data-testid="ow-board">
+    <div data-testid="ow-board" className="mt-2">
       {rows.length ? (
-        <ol className="grid gap-1">
-          {rows.map((r) => (
+        <ol className="m-0 grid list-none gap-1 p-0">
+          {rows.slice(0, 5).map((r) => (
             <li key={`${r.rank}-${r.handle}`} className="flex items-baseline justify-between gap-3 border-b border-rule py-1">
               <span className="flex min-w-0 items-baseline gap-3">
                 <span className="ty-num w-6 text-ink-dim">{r.rank}</span>
                 <span className="truncate">{r.handle}</span>
               </span>
-              <span className="ty-num">{r.score}</span>
+              <span className="ty-num font-bold">{r.score}</span>
             </li>
           ))}
         </ol>
-      ) : (
-        <p className="text-ink-dim">No named runs yet today. Sign in and pick a handle to make the board.</p>
-      )}
-      <p className="ty-label mt-4">
+      ) : null}
+      <p className="m-0 mt-2 text-[14px] text-ink-dim">
         {totalRuns} {totalRuns === 1 ? 'run' : 'runs'} today
         {anonymousCount > 0 ? ` · ${anonymousCount} anonymous` : ''}
+        {rows.length ? '' : '. Sign in and pick a handle to make the board.'}
       </p>
-      {totalRuns > 0 ? <Tag tone="dim" className="mt-2">Score = correct picks in a row</Tag> : null}
     </div>
   );
 }

@@ -9,6 +9,12 @@ import { test, expect } from './fixtures';
 
 const API = /\/api\/modes\/opening-weekend\/(start|answer|finish)$/;
 const grossOf = new Map(library.films.map((f) => [f.id, f.boxOfficeUsd]));
+const TODAY_RUN = /^Today's run \(\d+s\)$/;
+
+/** The share artifact's emoji text, carried on the panel wrapper whatever the panel renders. */
+async function shareText(page: Page): Promise<string> {
+  return (await page.getByTestId('ow-share').getAttribute('data-share-text')) ?? '';
+}
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function nyMonthDay(): string {
@@ -78,8 +84,13 @@ test('lobby renders at this width without horizontal scroll', async ({ page }) =
   // The page shell carries no grosses at all.
   for (const g of library.films.map((f) => f.boxOfficeUsd).filter(Boolean)) expect(html).not.toContain(String(g));
   await expect(page.getByRole('heading', { level: 1 })).toContainText(/Opening/i);
-  await expect(page.getByRole('button', { name: "Start today's run" })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Start practice' })).toBeVisible();
+  await expect(page.getByRole('button', { name: TODAY_RUN })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Practice', exact: true })).toBeVisible();
+  // Rules live behind a small "How to play" sheet.
+  await page.getByTestId('how-to-play').click();
+  await expect(page.getByRole('dialog')).toContainText('One wrong pick ends the run');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByTestId('ow-board')).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
@@ -88,7 +99,7 @@ test('lobby renders at this width without horizontal scroll', async ({ page }) =
 test('practice: keyboard play, streak, run over, best streak kept', async ({ page }) => {
   const bodies = watchBodies(page);
   await page.goto('/modes/opening-weekend');
-  await page.getByRole('button', { name: 'Start practice' }).click();
+  await page.getByRole('button', { name: 'Practice', exact: true }).click();
   await expect(page.getByTestId('ow-run')).toHaveAttribute('data-mode', 'practice');
   await ready(page);
   // No money on screen before the pick, and the pair fits the viewport.
@@ -111,8 +122,8 @@ test('practice: keyboard play, streak, run over, best streak kept', async ({ pag
   await expect(page.getByTestId('ow-run')).toContainText('✗ Your pick');
   await expect(page.getByTestId('ow-run')).toContainText('LOWER');
   await expect(page.getByTestId('ow-run')).toContainText('HIGHER');
-  await expect(page.getByTestId('ow-share-text')).toContainText(`${APP_NAME} · Opening Weekend · Practice · 2 in a row`);
-  await page.getByRole('button', { name: 'Back to the lobby' }).click();
+  expect((await shareText(page)).split('\n')[0]).toBe(`${APP_NAME} · Opening Weekend · Practice · 2 in a row`);
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
   await expect(page.getByTestId('ow-best')).toContainText('2');
   expectNoEarlyGrosses(bodies);
 });
@@ -120,7 +131,7 @@ test('practice: keyboard play, streak, run over, best streak kept', async ({ pag
 test('daily run: tap to play, share line, one run per day', async ({ page }) => {
   const bodies = watchBodies(page);
   await page.goto('/modes/opening-weekend');
-  await page.getByRole('button', { name: "Start today's run" }).click();
+  await page.getByRole('button', { name: TODAY_RUN }).click();
   await expect(page.getByTestId('ow-run')).toHaveAttribute('data-mode', 'daily');
   await expect(page.getByTestId('ow-timer')).toHaveText(/^0:[0-5]\d$|^1:00$/);
   await ready(page);
@@ -139,15 +150,18 @@ test('daily run: tap to play, share line, one run per day', async ({ page }) => 
 
   await expect(page.getByTestId('ow-over')).toHaveAttribute('data-outcome', 'wrong');
   const line = `${APP_NAME} · Opening Weekend · ${nyMonthDay()} · 2 in a row`;
-  await expect(page.getByTestId('ow-share-text')).toContainText(line);
-  await expect(page.getByTestId('ow-share-text')).toContainText('/modes/opening-weekend');
+  const text = await shareText(page);
+  expect(text.split('\n')[0]).toBe(line);
+  expect(text).toContain('/modes/opening-weekend');
+  // Spoiler-free: no title from the run is in the share text.
+  for (const f of library.films) if (f.title.length >= 6) expect(text).not.toContain(f.title);
   expectNoEarlyGrosses(bodies);
 
   // Reload: the day's run is locked in.
   await page.reload();
   const done = page.getByTestId('ow-daily-done');
   await expect(done).toContainText('2 in a row');
-  await expect(page.getByRole('button', { name: "Start today's run" })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: TODAY_RUN })).toHaveCount(0);
   await expect(page.getByTestId('ow-board')).toContainText(/\d+ runs? today/);
 
   // A direct API call cannot start a second run either.

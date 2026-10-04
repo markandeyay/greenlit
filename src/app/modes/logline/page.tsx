@@ -5,10 +5,8 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { APP_NAME } from '@/config/brand';
 import { LOGLINE } from '@/config/modes';
-import { Breadcrumb } from '@/components/chrome/Breadcrumb';
-import { SceneHeading } from '@/components/chrome/SceneHeading';
-import { Accent } from '@/components/ui/Heading';
 import { LoglineGame } from '@/components/modes/logline/LoglineGame';
+import { ModeHeader } from '@/components/modes/logline/ModeHeader';
 import type { LoglineStateResponse } from '@/components/modes/logline/types';
 import { resolveIdentity } from '@/server/plays';
 import { getLoglineState, readStateToken } from '@/server/modes/logline';
@@ -35,26 +33,22 @@ async function initialState(): Promise<LoglineStateResponse | null> {
   }
 }
 
+const RULES = [
+  'Read the logline: a one line summary of a film.',
+  'Type a title and pick it from the list to make a take.',
+  `Each miss unlocks a sharper draft of the logline. There are ${LOGLINE.tiers} drafts in all.`,
+  `You get ${LOGLINE.maxTakes} takes. Name the film in as few as you can.`,
+  'Finish to see the film and share your result. A new logline drops at midnight, New York time.',
+];
+
 export default async function LoglinePage() {
   const initial = await initialState();
   return (
-    <main className="l-page gl-page">
-      <Breadcrumb items={[{ label: APP_NAME, href: '/' }, { label: 'Modes', href: '/modes' }, { label: 'Logline' }]} />
-      <div className="mt-8">
-        <SceneHeading
-          n={1}
-          as="h1"
-          size="lg"
-          slug="INT. THE WRITERS ROOM - NIGHT"
-          title={
-            <>
-              The <Accent>logline</Accent>
-            </>
-          }
-          meta={`One film a day. ${LOGLINE.maxTakes} takes. Every miss buys a sharper draft`}
-        />
+    <main className="l-page pt-4 pb-12 sm:pt-8">
+      <div className="mx-auto flex w-full max-w-xl flex-col gap-4">
+        <ModeHeader title="Logline" goal="Name the film from its logline. Every miss makes it sharper." rules={RULES} />
+        <LoglineGame initial={initial} />
       </div>
-      <LoglineGame initial={initial} />
     </main>
   );
 }

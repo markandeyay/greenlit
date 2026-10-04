@@ -4,12 +4,13 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { useState } from 'react';
 import { APP_NAME, shareHost } from '@/config/brand';
 import { ToastProvider } from '@/components/ui';
-import { buildReleaseOrderShare, moveKey, ReleaseOrderGame, SortBoard } from '@/components/modes/release-order';
+import { buildReleaseOrderShare, moveKey, releaseOrderArtifact, ReleaseOrderGame, SortBoard } from '@/components/modes/release-order';
 import fixtureLibrary from '@/server/db/fixtures/library.json';
 import { pickDailySet } from '@/server/modes/release-order/logic';
 import type { Film } from '@/lib/types';
 import type { ReleaseOrderCard, ReleaseOrderState } from '@/server/modes/release-order/types';
 import { addDays } from '@/lib/dates';
+import { checkArtifactCard, toCard } from '@/components/share/artifactCodec';
 
 afterEach(() => {
   cleanup();
@@ -64,6 +65,29 @@ describe('share text', () => {
     expect(text).toBe(`${APP_NAME} · Release Order · Oct 4 · 2/3\n🟨🟨🟩⬛🟨\n🟩🟩🟩🟩🟩\n${shareHost()}/modes/release-order`);
     expect(text).not.toContain('—');
   });
+  it('builds a spoiler-free artifact with one row per take', () => {
+    const a = releaseOrderArtifact({
+      ...base,
+      date: '2026-10-04',
+      status: 'won',
+      attempts: [
+        { order: [1, 0, 2, 4, 3], feedback: ['close', 'close', 'match', 'miss', 'close'] },
+        { order: [0, 1, 2, 3, 4], feedback: ['match', 'match', 'match', 'match', 'match'] },
+      ],
+    });
+    expect(a).toMatchObject({ mode: 'release_order', reelNumber: null, date: '2026-10-04', outcome: 'won', stat: '2/3', statCaption: 'takes' });
+    expect(a.grid).toEqual([
+      ['close', 'close', 'match', 'miss', 'close'],
+      ['match', 'match', 'match', 'match', 'match'],
+    ]);
+    expect(a.url).toMatch(/\/modes\/release-order$/);
+    expect(a.text.split('\n')[0]).toBe(`${APP_NAME} · Release Order · Oct 4 · 2/3`);
+    const lost = releaseOrderArtifact({ ...base, date: '2026-10-04', status: 'lost', attempts: [] });
+    expect(lost).toMatchObject({ outcome: 'lost', stat: 'X/3' });
+    expect(checkArtifactCard(toCard(a))).toEqual({ ok: true });
+    expect(checkArtifactCard(toCard(lost))).toEqual({ ok: true });
+  });
+
   it('reads X for a loss and never includes titles', () => {
     const attempts = Array.from({ length: 3 }, () => ({ order: [4, 3, 2, 1, 0], feedback: ['miss', 'close', 'match', 'close', 'miss'] as const }));
     const text = buildReleaseOrderShare({ ...base, status: 'lost', attempts: attempts.map((a) => ({ ...a, feedback: [...a.feedback] })) });
@@ -107,7 +131,9 @@ describe('ReleaseOrderGame', () => {
     expect(within(reveal).getAllByTestId('ro-reveal-date')[0]).toHaveTextContent('May 1, 1970');
     const body = JSON.parse(String(fetchMock.mock.calls[1]![1]!.body));
     expect(body).toEqual({ date: '2026-10-04', order: [0, 1, 2, 3, 4] });
-    expect(screen.getByTestId('ro-share-preview').textContent).toContain('1/3');
+    const share = screen.getByTestId('ro-share');
+    expect(share.getAttribute('data-share-text')).toContain('1/3');
+    expect(share.getAttribute('data-share-text')).not.toMatch(/Alpha|1970/);
   });
 });
 

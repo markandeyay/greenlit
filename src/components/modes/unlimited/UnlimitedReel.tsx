@@ -12,8 +12,17 @@ import { friendlyError } from '@/lib/game/api';
 import { plural } from '@/lib/format';
 import { readLocalStats, summarize } from '@/lib/local-stats';
 import type { PlayStateResponse, RegionCode } from '@/lib/types';
+import { HowToPlay, ModeHeader } from '../ModeHeader';
 import { BandPicker } from './BandPicker';
 import { dealReel, emptyPlay, readStoredReel, resumeReel, writeStoredReel } from './reel-client';
+
+const GOAL = `Endless practice. Name a random film in ${RULES.maxGuesses} takes.`;
+const RULES_LIST = [
+  'Pick a difficulty, then roll a random film from it.',
+  'Search any film for a take. Each clue shows ✓ match, ≈ close or a miss, and number clues say which way to go (LATER or EARLIER, BIGGER or SMALLER).',
+  `You have ${RULES.maxGuesses} takes. Script Notes hints unlock as you go.`,
+  'No streaks and no leaderboard here. Finish a reel and roll the next one.',
+];
 
 type Phase =
   | { name: 'boot' }
@@ -107,22 +116,13 @@ export function UnlimitedReel({ playerRegion }: { playerRegion?: RegionCode }) {
 
   if (phase.name === 'pick') {
     return (
-      <section aria-labelledby="unlimited-title" className="border border-rule bg-surface px-4 py-6 sm:px-6">
-        <p className="ty-micro text-ink-dim">{KICKER}</p>
-        <h1 id="unlimited-title" className="ty-display mt-2 text-[clamp(34px,7vw,64px)] leading-[0.9]">
-          Dailies <Accent>reel</Accent>
-        </h1>
-        <p className="mt-4 max-w-[52ch] text-[15px] text-ink-dim">
-          Endless practice with the classic rules: {RULES.maxGuesses} takes to name a random film. Pick how deep
-          into the archive we dig. No streaks, no leaderboard, just reps.
-        </p>
-        <BandPicker className="mt-6" legend="Difficulty" value={band} onChange={setBand} disabled={dealing} />
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <Button variant="solid" onClick={() => void deal(null)} disabled={dealing} aria-busy={dealing || undefined}>
-            {dealing ? 'Dealing...' : 'Roll the reel'}
-          </Button>
-          {tally ? <p className="font-mono text-[12px] text-ink-dim">{tally}</p> : null}
-        </div>
+      <section aria-label="Dailies Reel" className="mx-auto flex max-w-xl flex-col gap-5">
+        <ModeHeader name="Dailies Reel" goal={GOAL} rules={RULES_LIST} />
+        <BandPicker legend="Pick a difficulty" value={band} onChange={setBand} disabled={dealing} />
+        <Button variant="slate" size="lg" block onClick={() => void deal(null)} disabled={dealing} aria-busy={dealing || undefined}>
+          {dealing ? 'Dealing...' : 'Roll the reel'}
+        </Button>
+        {tally ? <p className="m-0 text-center font-mono text-[12px] text-ink-dim">{tally}</p> : null}
       </section>
     );
   }
@@ -146,12 +146,12 @@ export function UnlimitedReel({ playerRegion }: { playerRegion?: RegionCode }) {
       initialPlay={phase.initialPlay}
       onNextReel={() => void deal(ref)}
       intro={
-        <div className="mt-4 grid gap-3">
-          <BandPicker legend="Difficulty for the next reel" value={band} onChange={setBand} disabled={dealing} />
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            {tally ? <p className="font-mono text-[12px] text-ink-dim">{tally}</p> : <span />}
-            {dealing ? <Spinner label="Dealing the next reel" showLabel /> : null}
-          </div>
+        <div className="mt-2 flex items-center justify-end gap-1" data-testid="reel-bar">
+          {dealing ? <Spinner label="Dealing the next reel" /> : null}
+          <Button variant="ghost" size="sm" onClick={() => setPhase({ name: 'pick' })} disabled={dealing}>
+            Change difficulty
+          </Button>
+          <HowToPlay title="How to play Dailies Reel" rules={RULES_LIST} />
         </div>
       }
     />

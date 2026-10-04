@@ -5,10 +5,11 @@
 // crosses a neighbour's midpoint.
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { Poster } from '@/components/game/Poster';
-import { cx, IconArrow, IconButton, StatusGlyph } from '@/components/ui';
+import { cx, IconArrow, IconButton } from '@/components/ui';
 import type { ReleaseOrderAttempt, ReleaseOrderCard, SlotVerdict } from '@/server/modes/release-order/types';
 
-const VERDICT_WORDS: Record<SlotVerdict, string> = { match: 'right slot', close: 'one slot off', miss: 'wrong slot' };
+export const SLOT_GLYPH: Record<SlotVerdict, string> = { match: '✓', close: '≈', miss: '✗' };
+export const SLOT_WORD: Record<SlotVerdict, string> = { match: 'Right spot', close: 'One off', miss: 'Wrong spot' };
 
 export function moveKey(order: readonly number[], key: number, to: number): number[] {
   const rest = order.filter((k) => k !== key);
@@ -132,12 +133,15 @@ export function SortBoard({
 
   return (
     <div>
-      <ol ref={listRef} className="m-0 flex list-none flex-col gap-2 p-0" aria-label="Your order, earliest first">
+      <ol ref={listRef} className="m-0 flex list-none flex-col gap-2 p-0" aria-label="Your order, oldest first">
         {order.map((key, i) => {
           const card = byKey.get(key);
           if (!card) return null;
           const lastPos = lastAttempt ? lastAttempt.order.indexOf(key) : -1;
           const lastVerdict = lastPos >= 0 ? lastAttempt!.feedback[lastPos]! : null;
+          // A chip describes the slot the film sat in on the last take, so it only shows while the
+          // film is still in that slot (otherwise it would describe a different position).
+          const chip = lastVerdict && lastPos === i ? lastVerdict : null;
           return (
             <li
               key={key}
@@ -145,43 +149,45 @@ export function SortBoard({
               data-key={key}
               data-testid="ro-item"
               className={cx(
-                'flex items-center gap-2 border-[1.5px] bg-surface p-2 sm:gap-3',
-                dragging === key ? 'border-ink' : 'border-rule',
+                'flex min-h-[64px] items-center gap-1.5 rounded-[6px] border-2 bg-surface py-1 pr-1 pl-0.5 sm:gap-3 sm:pr-2',
+                dragging === key ? 'border-ink shadow-md' : 'border-rule',
               )}
             >
-              <span className="ty-label w-6 shrink-0 text-center tabular-nums" aria-hidden="true">
-                {i + 1}
-              </span>
               <span
                 aria-hidden="true"
                 data-testid="ro-grip"
                 onPointerDown={(e) => onPointerDown(e, key)}
                 className={cx(
-                  'grid h-11 w-6 shrink-0 touch-none select-none place-items-center text-ink-dim',
-                  disabled ? 'cursor-default opacity-40' : 'cursor-grab active:cursor-grabbing',
+                  'grid h-14 w-10 shrink-0 touch-none select-none place-items-center rounded-[4px] text-ink-dim',
+                  disabled ? 'cursor-default opacity-40' : 'cursor-grab hover:bg-surface-2 active:cursor-grabbing',
                 )}
               >
                 <GripIcon />
               </span>
-              <Poster title={card.title} posterPath={card.posterPath} size="xs" />
+              <span className="ty-num w-5 shrink-0 text-center font-mono text-[15px] font-bold" aria-hidden="true">
+                {i + 1}
+              </span>
+              <Poster title={card.title} posterPath={card.posterPath} size="sm" />
               <div className="min-w-0 flex-1">
-                <p className="m-0 font-semibold leading-tight [overflow-wrap:anywhere]" data-testid="ro-title">
+                <p className="m-0 line-clamp-2 text-[15px] leading-tight font-semibold [overflow-wrap:anywhere]" data-testid="ro-title">
                   <span className="sr-only">Position {i + 1}: </span>
                   {card.title}
                 </p>
-                {lastVerdict ? (
+                {chip ? (
                   <p className="m-0 mt-1">
                     <span
-                      className="gl-status inline-flex items-center gap-1 rounded-[3px] border px-1.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wide"
-                      data-verdict={lastVerdict}
+                      className="gl-status inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] font-bold"
+                      data-verdict={chip}
+                      data-testid="ro-chip"
                     >
-                      <StatusGlyph verdict={lastVerdict} className="!text-[12px]" />
-                      Last take: slot {lastPos + 1}, {VERDICT_WORDS[lastVerdict]}
+                      <span aria-hidden="true">{SLOT_GLYPH[chip]}</span>
+                      <span className="sr-only">Last take: </span>
+                      {SLOT_WORD[chip]}
                     </span>
                   </p>
                 ) : null}
               </div>
-              <div className="flex shrink-0 flex-col sm:flex-row">
+              <div className="flex shrink-0 flex-col gap-0.5">
                 <IconButton
                   size="sm"
                   outline
@@ -191,7 +197,7 @@ export function SortBoard({
                   disabled={disabled || i === 0}
                   onClick={() => step(key, 'up')}
                   icon={<IconArrow className="-rotate-90" />}
-                  className="disabled:opacity-30"
+                  className="!h-10 !w-11 disabled:opacity-30"
                 />
                 <IconButton
                   size="sm"
@@ -202,7 +208,7 @@ export function SortBoard({
                   disabled={disabled || i === n - 1}
                   onClick={() => step(key, 'down')}
                   icon={<IconArrow className="rotate-90" />}
-                  className="disabled:opacity-30"
+                  className="!h-10 !w-11 disabled:opacity-30"
                 />
               </div>
             </li>
