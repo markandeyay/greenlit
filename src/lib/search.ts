@@ -38,7 +38,7 @@ function editDistanceAtMost1(a: string, b: string): boolean {
 
 /**
  * Score how well a normalized query matches a title. 0 = no match. Higher is better.
- * Exact > prefix > every query word prefixes a title word > fuzzy (one typo per word, 4+ chars).
+ * Exact > prefix > every query word prefixes a title word > fuzzy (one typo per word, 5+ chars).
  */
 export function scoreTitleMatch(normalizedQuery: string, title: string): number {
   const q = normalizedQuery;
@@ -55,7 +55,7 @@ export function scoreTitleMatch(normalizedQuery: string, title: string): number 
   let fuzzy = false;
   for (const qw of qWords) {
     if (tWords.some((tw) => tw.startsWith(qw))) continue;
-    if (qw.length >= 4 && tWords.some((tw) => editDistanceAtMost1(qw, tw.slice(0, qw.length)) || editDistanceAtMost1(qw, tw))) {
+    if (qw.length >= 5 && tWords.some((tw) => editDistanceAtMost1(qw, tw.slice(0, qw.length)) || editDistanceAtMost1(qw, tw))) {
       fuzzy = true;
       continue;
     }

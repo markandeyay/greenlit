@@ -14,3 +14,11 @@ describe('search matching', () => {
     expect(s('zzz', 'Inception')).toBe(0);
   });
 });
+
+describe('fuzzy guard', () => {
+  it('does not treat short words as typos of other words', () => {
+    const s = (q: string, t: string) => scoreTitleMatch(normalizeForSearch(q), t);
+    expect(s('dark', 'Jurassic Park')).toBe(0);
+    expect(s('dark', 'Raiders of the Lost Ark')).toBe(0);
+  });
+});
