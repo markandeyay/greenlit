@@ -1,19 +1,17 @@
-import Image from 'next/image';
-import { tmdbImage, type TmdbImageSize } from '@/config/brand';
+import { tmdbImage } from '@/config/brand';
 import { cx } from '@/components/ui/cx';
-import { hashString, initials } from '@/lib/format';
+import { ArtImage } from '@/components/art/ArtImage';
+import { FilmArt } from '@/components/art/FilmArt';
+import { tmdbSizeFor } from '@/components/art/tmdb';
 
-const SIZES: Record<'xs' | 'sm' | 'md' | 'lg', { w: number; tmdb: TmdbImageSize }> = {
-  xs: { w: 32, tmdb: 'w92' },
-  sm: { w: 48, tmdb: 'w92' },
-  md: { w: 96, tmdb: 'w185' },
-  lg: { w: 200, tmdb: 'w342' },
-};
+const SIZES: Record<'xs' | 'sm' | 'md' | 'lg', number> = { xs: 32, sm: 48, md: 96, lg: 200 };
 
 /**
- * A film poster from TMDB's CDN (never rehosted), or a typographic one-sheet fallback: kicker,
- * big initials, title and year, in one of four print styles picked from the title. Decorative by
- * default (the title is always printed next to it).
+ * A film poster: the TMDB image (never rehosted) layered over a designed, deterministic one-sheet
+ * (src/components/art). The art is the loading placeholder, the fallback when there is no
+ * `posterPath`, and the fallback when the image fails. xs and sm render the compact motif and
+ * monogram card. Decorative by default (the title is always printed next to it); pass `alt` to
+ * give it an accessible name.
  */
 export function Poster({
   title,
@@ -32,29 +30,20 @@ export function Poster({
   className?: string;
   priority?: boolean;
 }) {
-  const { w, tmdb } = SIZES[size];
-  const src = tmdbImage(posterPath, tmdb);
+  const w = SIZES[size];
+  const h = Math.round(w * 1.5);
+  const src = tmdbImage(posterPath, tmdbSizeFor(w));
   return (
     <span
       className={cx('gm-poster block', `gm-poster--${size}`, className)}
-      style={{ width: w }}
+      // Positioning inline so the art never escapes when game.css is not on the page.
+      style={{ width: w, position: 'relative', overflow: 'hidden', aspectRatio: '2 / 3', flex: 'none' }}
       role={alt ? 'img' : undefined}
       aria-label={alt || undefined}
       aria-hidden={alt ? undefined : true}
     >
-      {src ? (
-        <Image src={src} alt="" fill sizes={`${w}px`} unoptimized priority={priority} />
-      ) : (
-        <span className="gm-sheet" data-v={hashString(title) % 4}>
-          <span className="gm-sheet__kicker">A film</span>
-          <span className="gm-sheet__mark">{initials(title)}</span>
-          <span className="block w-full">
-            <span className="gm-sheet__rule block" />
-            <span className="gm-sheet__title">{title}</span>
-            {year ? <span className="gm-sheet__year block">{year}</span> : null}
-          </span>
-        </span>
-      )}
+      <FilmArt film={{ title, year }} size={h} style={{ position: 'absolute', inset: 0 }} />
+      <ArtImage src={src} alt={alt} width={w} height={h} priority={priority} />
     </span>
   );
 }

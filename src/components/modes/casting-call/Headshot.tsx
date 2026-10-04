@@ -1,9 +1,15 @@
-import Image from 'next/image';
 import { tmdbImage } from '@/config/brand';
 import { cx } from '@/components/ui/cx';
-import { initials } from '@/lib/format';
+import { ArtImage } from '@/components/art/ArtImage';
+import { PersonArt } from '@/components/art/PersonArt';
+import { tmdbSizeFor } from '@/components/art/tmdb';
 
-/** Headshot tile: the TMDB profile image when there is one, otherwise an initials card. Decorative. */
+const PX = { sm: { w: 32, h: 40 }, md: { w: 48, h: 64 }, lg: { w: 72, h: 96 } } as const;
+
+/**
+ * Headshot tile: the TMDB profile image layered over a designed portrait tile (src/components/art),
+ * which is the placeholder, the no-photo fallback and the error fallback. Decorative.
+ */
 export function Headshot({
   name,
   profilePath,
@@ -15,9 +21,9 @@ export function Headshot({
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }) {
-  const src = tmdbImage(profilePath, 'w185');
+  const { w, h } = PX[size];
+  const src = tmdbImage(profilePath, tmdbSizeFor(w));
   const box = size === 'sm' ? 'h-10 w-8' : size === 'lg' ? 'h-24 w-[4.5rem]' : 'h-16 w-12';
-  const text = size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-3xl' : 'text-xl';
   return (
     <span
       aria-hidden="true"
@@ -27,15 +33,8 @@ export function Headshot({
         className,
       )}
     >
-      {src ? (
-        <Image src={src} alt="" fill sizes="96px" unoptimized className="object-cover" />
-      ) : (
-        <>
-          <span className="pointer-events-none absolute inset-x-1 top-1 h-px bg-ink-faint" />
-          <span className={cx('ty-display leading-none text-ink', text)}>{initials(name)}</span>
-          <span className="pointer-events-none absolute inset-x-1 bottom-1 h-px bg-ink-faint" />
-        </>
-      )}
+      <PersonArt person={{ name }} style={{ position: 'absolute', inset: 0 }} />
+      <ArtImage src={src} alt="" width={w} height={h} />
     </span>
   );
 }

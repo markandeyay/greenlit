@@ -1,4 +1,5 @@
-import Image from 'next/image';
+import { ArtImage } from '@/components/art/ArtImage';
+import { PersonArt } from '@/components/art/PersonArt';
 import type { CSSProperties } from 'react';
 import { tmdbImage } from '@/config/brand';
 import { StatusGlyph } from '@/components/ui/StatusGlyph';
@@ -91,16 +92,15 @@ export function PersonCell({ role, person, unitSize = 1, slot, index, animate = 
       aria-label={aria}
     >
       <div className="gm-person__tile gl-status" data-verdict={verdict}>
-        {src ? (
-          <Image src={src} alt="" fill sizes="96px" unoptimized />
-        ) : unit ? (
+        {unit ? (
           <span className="gm-person__split">
             <span>{letters[0]}</span>
             <span>{letters[1] ?? letters[0]}</span>
           </span>
         ) : (
-          <span className="gm-person__initials">{letters}</span>
+          <PersonArt person={{ name: person.name }} tone="status" style={{ position: 'absolute', inset: 0 }} />
         )}
+        <ArtImage src={src} alt="" width={96} height={120} />
         {verdict === 'match' ? (
           <span className="gm-person__glyph">
             <StatusGlyph verdict="match" />
