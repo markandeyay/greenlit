@@ -348,6 +348,7 @@ export class SupabaseRepo implements Repo {
   async createPitch(pitch: Pitch) {
     await this.ensureLibrary();
     check(await this.db.from('pitches').insert({ slug: pitch.slug, film_id: pitch.filmId, note: pitch.note, creator_id: pitch.creatorId, created_at: pitch.createdAt }));
+    return { ...pitch };
   }
   async getPitch(slug: string) {
     const r = check(await this.db.from('pitches').select('*').eq('slug', slug).maybeSingle());

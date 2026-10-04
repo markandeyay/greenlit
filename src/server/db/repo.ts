@@ -72,7 +72,12 @@ export interface Repo {
   deletePuzzle(number: number): Promise<void>;
 
   // Pitches (SERVER ONLY) ---------------------------------------------------
-  createPitch(pitch: Pitch): Promise<void>;
+  /**
+   * Store a pitch and return it as stored. The returned slug may differ from the input: the
+   * in-memory repo (keyless deployments) replaces it with an opaque encrypted token so the
+   * pitch resolves on any serverless instance. Always use the returned slug.
+   */
+  createPitch(pitch: Pitch): Promise<Pitch>;
   getPitch(slug: string): Promise<Pitch | null>;
   listPitchesByCreator(creatorId: string): Promise<Pitch[]>;
 

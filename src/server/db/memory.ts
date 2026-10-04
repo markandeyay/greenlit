@@ -18,6 +18,7 @@ import type {
 } from '@/lib/types';
 import type { LibrarySnapshot, PlayFilter, Repo } from './repo';
 import { normalizeForSearch, scoreTitleMatch } from '@/lib/search';
+import { decrypt, encrypt } from './secret';
 
 interface MemoryState {
   films: Map<number, Film>;
@@ -154,12 +155,27 @@ export class MemoryRepo implements Repo {
 
   // Pitches -----------------------------------------------------------------
   async createPitch(pitch: Pitch) {
-    if (this.s.pitches.has(pitch.slug)) throw new Error('slug exists');
-    this.s.pitches.set(pitch.slug, clone(pitch));
+    // Opaque, instance-independent slug: AES-GCM of the pitch (not derivable from the film).
+    const slug = encrypt(JSON.stringify({ f: pitch.filmId, n: pitch.note, c: pitch.creatorId, t: pitch.createdAt }));
+    const stored: Pitch = { ...pitch, slug };
+    this.s.pitches.set(slug, clone(stored));
+    // The caller's random slug also resolves on this instance.
+    if (!this.s.pitches.has(pitch.slug)) this.s.pitches.set(pitch.slug, clone(pitch));
+    return clone(stored);
   }
   async getPitch(slug: string) {
     const p = this.s.pitches.get(slug);
-    return p ? clone(p) : null;
+    if (p) return clone(p);
+    const raw = slug.length > 28 ? decrypt(slug) : null;
+    if (!raw) return null;
+    try {
+      const d = JSON.parse(raw) as { f: number; n: string | null; c: string | null; t: string };
+      const restored: Pitch = { slug, filmId: d.f, note: d.n, creatorId: d.c, createdAt: d.t };
+      this.s.pitches.set(slug, restored);
+      return clone(restored);
+    } catch {
+      return null;
+    }
   }
   async listPitchesByCreator(creatorId: string) {
     return [...this.s.pitches.values()].filter((p) => p.creatorId === creatorId).map(clone);
