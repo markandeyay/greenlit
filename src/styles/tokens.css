@@ -1,35 +1,65 @@
-/* Design tokens (Section 6.2). Variable names are a contract; WS4 may retune values from the
-   SFA site source but must keep every name below.
+/* Design tokens (Section 6.2). Variable names are a contract: retune values, never rename.
    Status colors (--green, --amber, --miss, --red-rec) are never used decoratively.
 
-   Retuned by WS4 from the UNC Student Film Association source (app/styles/tokens.css):
-   SFA "ink" #0E0D0C is our projection-booth black, SFA "paper" #F5F2EB is our film-print cream,
-   SFA ink-hair / 16% paper-on-ink rules are flattened to solid hex so contrast can be tested.
-   SFA REC #E0261F is 4.1:1 on black, so the REC token is lifted to #F04A42 (5.3:1) to stay AA
-   when it carries text. See src/styles/README.md. */
+   The skin is the UNC Student Film Association site (sfawebsite/app/styles/tokens.css), read
+   the way that site actually reads: bright script paper with ink type, Carolina and navy as the
+   brand accents, REC red as the one hot color, marker yellow as a highlighter, and projector
+   black kept for accent SECTIONS only (the slate board, the leader, the footer: `.t-ink`).
+   "A printed screenplay on a sunny production office desk", not a projection booth.
+   Every color the contrast test reads is a flat hex. See src/styles/README.md. */
 
 :root {
-  --bg: #0e0d0c;            /* projection-booth black (SFA --ink) */
-  --surface: #171513;
-  --surface-2: #221f1c;
-  --ink: #f5f2eb;           /* film-print cream (SFA --paper) */
-  --ink-dim: #a8a196;       /* 7.6:1 on --bg, 6.4:1 on --surface-2 */
-  --rule: #36332f;          /* SFA rgba(245,242,235,.16) on ink, flattened */
-  --green: #2fbf71;         /* the greenlight; MATCH */
-  --green-ink: #06210f;
-  --amber: #e8a93a;         /* CLOSE (numeric only) */
-  --amber-ink: #2a1a00;
-  --miss: #3a3633;          /* NO MATCH */
-  --red-rec: #f04a42;       /* REC dot, loss state accents only */
+  --bg: #f5f2eb;            /* script paper (SFA --paper) */
+  --surface: #fbf9f4;       /* a fresh sheet laid on the paper */
+  --surface-2: #efe9dc;     /* warm paper (SFA --paper-warm) */
+  --ink: #1a1714;           /* SFA --ink, a touch warmer */
+  --ink-dim: #4a4640;       /* SFA --ink-soft: 8.6:1 on --bg, 7.8:1 on --surface-2 */
+  --rule: #d9d3c7;          /* SFA --ink-hair on paper, flattened */
+  --green: #3dbe78;         /* the greenlight; MATCH */
+  --green-ink: #06210f;     /* 7.2:1 on --green */
+  --amber: #f2c14e;         /* CLOSE (numeric only): SFA marker yellow */
+  --amber-ink: #2a1a00;     /* 10:1 on --amber */
+  --miss: #e2dccf;          /* NO MATCH: a light warm gray tile, ink type */
+  --miss-ink: #1a1714;      /* type on --miss; fixed so it holds inside .t-ink sections too */
+  --red-rec: #c4211b;       /* SFA --rec cut for text on paper (5.3:1); loss accents only */
 
-  /* ---- Extended tokens (WS4, additive; not part of the WS0 contract) ---------------------- */
+  /* ---- Extended tokens (additive; not part of the WS0 contract) --------------------------- */
+
+  /* SFA palette, by name. */
+  --paper: #f5f2eb;
+  --paper-warm: #efe9dc;
+  --paper-cool: #edeff1;
+  --carolina: #4b9cd3;
+  --carolina-hi: #9acbeb;
+  --navy: #13294b;
+  --navy-soft: #1e3a66;
+  --on-navy: #f2f5f8;
+  --marker: #f2c14e;        /* highlighter on a script page, nothing else */
+  --rec: #e0261f;           /* the REC dot itself (decorative, never text) */
+  --revision-blue: #e3eef7; /* a blue revision page: script notes */
+
+  /* Brand roles. Carolina is 2.7:1 on paper, so text takes the darker cut (SFA rule). */
+  --accent: #4b9cd3;        /* fills, rules, focus halo; never small text */
+  --accent-ink: #2a6a99;    /* links, active nav, info text: 5.2:1 on --bg */
+  --green-deep: #17733f;    /* the match color at text size (win stamp): 5.4:1 on --bg */
+
+  /* Projector black, for .t-ink accent sections. */
+  --ink-section: #0e0d0c;
+  --on-ink: #f5f2eb;
+  --on-ink-dim: #a8a196;
 
   /* Neutral helpers derived from ink. Never status. */
-  --ink-faint: rgba(245, 242, 235, 0.16);
-  --ink-hair: rgba(245, 242, 235, 0.09);
-  --ink-ghost: rgba(245, 242, 235, 0.05);
-  --perf: rgba(245, 242, 235, 0.88);     /* sprocket hole color on leader strips */
-  --scrim: rgba(8, 7, 6, 0.78);          /* dialog backdrop */
+  --ink-faint: rgba(26, 23, 20, 0.16);
+  --ink-hair: rgba(26, 23, 20, 0.08);
+  --ink-ghost: rgba(26, 23, 20, 0.04);
+  --perf: rgba(26, 23, 20, 0.14);        /* sprocket holes on paper strips */
+  --scrim: rgba(26, 23, 20, 0.42);       /* dialog backdrop: dimmed, not blacked out */
+  --wash: rgba(245, 242, 235, 0.88);     /* sticky header over scrolled content */
+
+  /* Depth: paper on a desk. Soft, warm, never a black drop. */
+  --shadow-sm: 0 1px 0 rgba(26, 23, 20, 0.04), 0 2px 6px -2px rgba(74, 58, 30, 0.12);
+  --shadow-md: 0 1px 0 rgba(26, 23, 20, 0.04), 0 10px 28px -12px rgba(74, 58, 30, 0.28);
+  --shadow-lg: 0 2px 0 rgba(26, 23, 20, 0.04), 0 22px 50px -18px rgba(74, 58, 30, 0.36);
 
   /* Type: font stacks. --font-display / --font-serif / --font-mono / --font-body are set by
      next/font on <html> (src/app/layout.tsx); these are the fallbacks. */
@@ -70,7 +100,8 @@
   --perf-w: 8px;
   --perf-h: 11px;
   --perf-gap: 20px;
-  --radius: 3px;
+  --radius: 6px;            /* softened from 3px: a trimmed index card, not a hard frame */
+  --radius-lg: 10px;
 
   /* Motion (SFA eases and durations). */
   --e-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -94,13 +125,48 @@
   --z-skip: 500;
 }
 
-/* Colorblind mode (Section 6.7): swap green/amber for blue/orange. Patterns are added by
-   components via [data-colorblind="true"] selectors. */
+/* Colorblind mode (Section 6.7): swap green/amber for blue/orange, tuned for paper. Patterns
+   are added by components via [data-colorblind="true"] selectors. */
 [data-colorblind="true"] {
-  --green: #3b8eea;
+  --green: #5aa9e6;
   --green-ink: #04172e;
-  --amber: #f08a24;
+  --amber: #f59e42;
   --amber-ink: #2b1400;
+  --green-deep: #1d5f99;
 }
 
-[data-theme="light"] { /* optional "daylight print" theme, phase 2 */ }
+/* Projector black, as an accent SECTION (SFA .t-ink): the slate board, the leader, the footer
+   band, the trailer frame. Re-scopes the surface tokens so the same markup and primitives work
+   on ink. Status tokens are untouched. */
+.t-ink {
+  --bg: #0e0d0c;
+  --surface: #171513;
+  --surface-2: #221f1c;
+  --ink: #f5f2eb;
+  --ink-dim: #a8a196;
+  --rule: #36332f;
+  --red-rec: #f04a42;
+  --accent-ink: #9acbeb;
+  --ink-faint: rgba(245, 242, 235, 0.18);
+  --ink-hair: rgba(245, 242, 235, 0.09);
+  --ink-ghost: rgba(245, 242, 235, 0.05);
+  --perf: rgba(245, 242, 235, 0.24);
+  --wash: #0e0d0c;
+  background-color: var(--bg);
+  color: var(--ink);
+}
+
+/* Navy band (SFA .t-navy) for an occasional info section. */
+.t-navy {
+  --bg: #13294b;
+  --surface: #1e3a66;
+  --surface-2: #1e3a66;
+  --ink: #f2f5f8;
+  --ink-dim: #b9d3ea;
+  --rule: #3a5480;
+  --accent-ink: #9acbeb;
+  --ink-faint: rgba(242, 245, 248, 0.2);
+  --ink-hair: rgba(242, 245, 248, 0.1);
+  background-color: var(--bg);
+  color: var(--ink);
+}

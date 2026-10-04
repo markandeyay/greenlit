@@ -13,7 +13,7 @@ export function TrailerEmbed({ youtubeKey, title }: { youtubeKey: string; title:
   if (!YT_ID.test(youtubeKey)) return null;
   const src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(youtubeKey)}?autoplay=1&rel=0&modestbranding=1`;
   return (
-    <div className="gm-trailer">
+    <div className="gm-trailer t-ink">
       {loaded ? (
         <iframe
           src={src}

@@ -4,6 +4,7 @@ import { APP_NAME, COPY, shareHost } from '@/config/brand';
 import { RULES } from '@/config/rules';
 import type { ShareCell, ShareGrid } from '../shareGrid';
 import { OG, OgStripes, monoLabel } from './ogTheme';
+import { reelLabel, UNLIMITED_SHARE_PATH } from '../shareText';
 
 const COLUMN_SHORT = ['DIR', 'LEAD', 'SUPP', 'YEAR', 'BOX', 'RTG', 'STU', 'GEN'];
 const CELL = 38;
@@ -44,7 +45,7 @@ function Cell({ cell }: { cell: ShareCell }) {
         alignItems: 'center',
         justifyContent: 'center',
         background: bg,
-        borderRadius: 3,
+        borderRadius: 6,
       }}
     >
       {cell === 'match' ? <Check color={OG.greenInk} /> : cell === 'close' ? <Close color={OG.amberInk} /> : null}
@@ -73,7 +74,7 @@ function Grid({ grid }: { grid: ShareGrid }) {
               justifyContent: 'flex-end',
               fontSize: 16,
               letterSpacing: 2,
-              color: i === lastWin ? OG.green : OG.inkDim,
+              color: i === lastWin ? OG.greenDeep : OG.inkDim,
             }}
           >
             {`TK${String(i + 1).padStart(2, '0')}`}
@@ -91,11 +92,11 @@ function Grid({ grid }: { grid: ShareGrid }) {
 }
 
 export function ResultImage({ grid }: { grid: ShareGrid }) {
-  const reel = grid.kind === 'pitch' || grid.reelNumber === null ? 'Pitch' : `Reel ${grid.reelNumber}`;
+  const reel = reelLabel(grid);
   const take = grid.status === 'won' ? String(grid.rows.length) : 'X';
   const won = grid.status === 'won';
   const link =
-    grid.kind === 'pitch' ? `${shareHost()}/pitch` : grid.kind === 'vault' ? `${shareHost()}/vault/${grid.reelNumber}` : `${shareHost()}/${grid.reelNumber}`;
+    grid.kind === 'unlimited' ? `${shareHost()}${UNLIMITED_SHARE_PATH}` : grid.kind === 'pitch' ? `${shareHost()}/pitch` : grid.kind === 'vault' ? `${shareHost()}/vault/${grid.reelNumber}` : `${shareHost()}/${grid.reelNumber}`;
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: OG.bg, color: OG.ink }}>
       <OgStripes />
@@ -115,8 +116,8 @@ export function ResultImage({ grid }: { grid: ShareGrid }) {
                 display: 'flex',
                 alignSelf: 'flex-start',
                 padding: '8px 18px',
-                border: `4px solid ${won ? OG.green : OG.red}`,
-                color: won ? OG.green : OG.red,
+                border: `4px solid ${won ? OG.greenDeep : OG.red}`,
+                color: won ? OG.greenDeep : OG.red,
                 fontSize: won ? 40 : 30,
                 letterSpacing: 4,
                 transform: 'rotate(-3deg)',

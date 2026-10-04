@@ -48,7 +48,7 @@ export function CalendarView({ schedule }: { schedule: ReturnType<typeof useSche
   const problems = future.filter((d) => d.puzzle?.problems.length).length;
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="font-mono text-sm">
           Today <b>{data.today}</b> · window {data.aheadDays} days · <span className="tabular-nums">{empty}</span> open ·{' '}
@@ -63,7 +63,7 @@ export function CalendarView({ schedule }: { schedule: ReturnType<typeof useSche
           </Button>
         </div>
       </div>
-      <ol className="grid gap-2" aria-label="Schedule by day">
+      <ol className="grid grid-cols-[minmax(0,1fr)] gap-2" aria-label="Schedule by day">
         {days.map((d) => {
           const p = d.puzzle;
           return (

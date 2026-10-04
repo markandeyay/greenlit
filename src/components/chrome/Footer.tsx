@@ -35,7 +35,7 @@ export function Footer() {
   const [first, ...rest] = end.split(' ');
   return (
     <footer className="gl-footer">
-      <LeaderStrip kind="tail" />
+      <LeaderStrip kind="tail" className="t-ink" />
       <div className="gl-footer__inner">
         <div className="gl-footer__end">
           <p className="gl-footer__big">
@@ -77,7 +77,7 @@ export function Footer() {
           {APP_NAME} · 24 fps · 2.39 : 1
         </p>
       </div>
-      <LeaderStrip kind="tail" left={<>Tail ▸ {APP_NAME}</>} right="Run out" />
+      <LeaderStrip kind="tail" className="t-ink" left={<>Tail ▸ {APP_NAME}</>} right="Run out" />
     </footer>
   );
 }

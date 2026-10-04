@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { APP_NAME } from '@/config/brand';
+import { LATER_MODES, MODES } from '@/config/modes';
 import { Breadcrumb } from '@/components/chrome/Breadcrumb';
 import { SceneHeading } from '@/components/chrome/SceneHeading';
-import { Accent } from '@/components/ui/Heading';
+import { Accent, AccentText } from '@/components/ui/Heading';
 import { Tag } from '@/components/ui/Tag';
 
 export const metadata: Metadata = {
@@ -11,35 +12,21 @@ export const metadata: Metadata = {
   description: `More ways to play ${APP_NAME}.`,
 };
 
-interface Mode {
-  name: string;
-  phase: 1 | 2 | 3;
-  pitch: string;
-  href?: string;
-}
+const pad2 = (n: number) => String(n).padStart(2, '0');
 
-/** Section 5. Phase 1 modes link to their live routes; later phases are listed as coming soon. */
-const MODES: Mode[] = [
-  { name: 'Classic', phase: 1, pitch: 'Deduce the film. The daily reel.', href: '/' },
-  { name: 'The Vault', phase: 1, pitch: 'Play past dailies.', href: '/vault' },
-  { name: 'Pitch', phase: 1, pitch: 'Pick a film, challenge a friend.', href: '/pitch' },
-  { name: 'Dailies Reel', phase: 2, pitch: 'Endless practice from a difficulty band.' },
-  { name: 'Opening Weekend', phase: 2, pitch: 'Two posters. Which grossed more?' },
-  { name: 'Release Order', phase: 2, pitch: 'Sort five films by release date.' },
-  { name: 'Themed weeks', phase: 2, pitch: 'Curated runs of daily reels.' },
-  { name: 'Casting Call', phase: 3, pitch: 'Connect two actors through shared films.' },
-  { name: 'Logline', phase: 3, pitch: 'Guess from a one-line synopsis.' },
-  { name: 'Double Feature', phase: 3, pitch: 'Live one on one. Same film, race.' },
-  { name: 'Frame Lock', phase: 3, pitch: 'Guess from stills, once the rights are clear.' },
-];
-
-const PHASE_LABEL: Record<Mode['phase'], string> = {
-  1: 'Now showing',
-  2: 'Coming soon',
-  3: 'In development',
-};
-
+/** The multiplex: every live mode is a screen you can walk into; later modes are still being fitted. */
 export default function ModesPage() {
+  const live = MODES.filter((m) => m.status === 'live');
+  const later = [
+    ...MODES.filter((m) => m.status === 'later').map((m) => ({
+      name: m.name,
+      pitch: m.pitch,
+      phase: m.phase,
+      laterReason: m.laterReason ?? 'Still in development.',
+    })),
+    ...LATER_MODES,
+  ];
+
   return (
     <main className="l-page gl-page">
       <Breadcrumb items={[{ label: APP_NAME, href: '/' }, { label: 'Modes' }]} />
@@ -48,41 +35,78 @@ export default function ModesPage() {
           n={1}
           as="h1"
           size="lg"
-          slug="INT. THE MULTIPLEX - NIGHT"
+          slug="INT. THE MULTIPLEX - DAY"
           title={
             <>
               The <Accent>modes</Accent>
             </>
           }
-          meta="Classic first. More screens are being fitted"
+          meta={`${live.length} screens showing today. Pick one and roll.`}
         />
       </div>
-      <ul className="mt-12 grid gap-px border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3">
-        {MODES.map((m, i) => {
-          const body = (
-            <>
-              <div className="flex items-center justify-between gap-3">
-                <span className="ty-label">Screen {String(i + 1).padStart(2, '0')}</span>
-                <Tag tone={m.phase === 1 ? 'solid' : 'dim'}>{PHASE_LABEL[m.phase]}</Tag>
-              </div>
-              <h2 className="ty-display mt-6 text-[length:var(--t-d3)]">{m.name}</h2>
-              <p className="mt-2 text-ink-dim">{m.pitch}</p>
-              <p className="ty-label mt-6">Phase {m.phase}</p>
-            </>
-          );
-          return (
-            <li key={m.name} className="bg-bg">
-              {m.href ? (
-                <Link href={m.href} className="block h-full p-5 transition-colors hover:bg-surface">
-                  {body}
-                </Link>
-              ) : (
-                <div className="h-full p-5 opacity-80">{body}</div>
-              )}
+
+      <section aria-labelledby="now-showing" className="mt-12">
+        <h2 id="now-showing" className="ty-label">
+          Now showing
+        </h2>
+        <ul className="gl-hub mt-4">
+          {live.map((m, i) => (
+            <li key={m.id}>
+              <Link href={m.href} className="gl-hub__card">
+                <span className="gl-hub__top">
+                  <span className="ty-label">Screen {pad2(i + 1)}</span>
+                  <Tag tone="solid">Phase {m.phase}</Tag>
+                </span>
+                <span className="gl-hub__title ty-display">
+                  <AccentText text={m.accentTitle} />
+                </span>
+                <span className="gl-hub__pitch">{m.pitch}</span>
+                <span className="gl-hub__cta">
+                  {m.id === 'classic' ? "Play today's reel" : `Play ${m.name}`}
+                  <span aria-hidden="true"> ▸</span>
+                </span>
+              </Link>
             </li>
-          );
-        })}
-      </ul>
+          ))}
+        </ul>
+      </section>
+
+      {later.length > 0 ? (
+        <section aria-labelledby="coming-later" className="mt-14">
+          <h2 id="coming-later" className="ty-label">
+            Coming later
+          </h2>
+          <ul className="gl-hub gl-hub--later mt-4">
+            {later.map((m) => (
+              <li key={m.name} className="gl-hub__card gl-hub__card--later">
+                <span className="gl-hub__top">
+                  <span className="ty-label">In development</span>
+                  <Tag tone="dim">Phase {m.phase}</Tag>
+                </span>
+                <h3 className="gl-hub__title ty-display">{m.name}</h3>
+                <p className="gl-hub__pitch">{m.pitch}</p>
+                <p className="gl-hub__why">
+                  <span className="ty-label">Why not yet</span> {m.laterReason}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section aria-labelledby="also-on-the-lot" className="mt-14">
+        <h2 id="also-on-the-lot" className="ty-label">
+          Also on the lot
+        </h2>
+        <ul className="gl-hub__lot mt-4">
+          <li>
+            <Link href="/vault">The Vault: replay any past reel</Link>
+          </li>
+          <li>
+            <Link href="/pitch">Pitch a film to a friend</Link>
+          </li>
+        </ul>
+      </section>
     </main>
   );
 }

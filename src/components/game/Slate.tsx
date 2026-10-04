@@ -49,7 +49,7 @@ export function Slate({
       >
         <span className="gm-slate__hinge" />
       </div>
-      <div className="gm-slate__board">
+      <div className="gm-slate__board t-ink">
         <div className="grid grid-cols-[1fr_auto] gap-4 px-4 pt-4 pb-3 sm:px-5">
           <div className="min-w-0">
             <p className="gm-slate__field">{kicker}</p>

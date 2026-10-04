@@ -33,7 +33,8 @@
   .gl-btn:hover {
     background: var(--ink);
     color: var(--bg);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
   }
   .gl-btn:active {
     transform: translateY(0);
@@ -69,7 +70,13 @@
     color: var(--bg);
   }
   .gl-btn--solid:hover {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: var(--on-navy);
+  }
+  .t-ink .gl-btn--solid:hover {
     background: var(--bg);
+    border-color: var(--ink);
     color: var(--ink);
   }
   .gl-btn--ghost {
@@ -114,7 +121,7 @@
     margin-inline: 1px;
     border: 1.5px solid var(--ink);
     border-bottom: 0;
-    border-radius: 3px 3px 0 0;
+    border-radius: 4px 4px 0 0;
     background: repeating-linear-gradient(-58deg, var(--ink) 0 7px, var(--bg) 7px 14px);
     transform: rotate(var(--arm-rest, -4deg));
     transform-origin: 0 100%;
@@ -132,6 +139,7 @@
     background: var(--ink);
     color: var(--bg);
     border-radius: 0 0 var(--radius) var(--radius);
+    box-shadow: var(--shadow-sm);
   }
   .gl-btn--slate.gl-btn--lg .gl-btn__stick {
     height: 13px;
@@ -192,7 +200,7 @@
     padding: 0.3em 0.75em;
     border: 1px solid var(--rule);
     border-radius: 999px;
-    background: var(--surface-2);
+    background: var(--surface);
     color: var(--ink);
     font-family: var(--f-mono);
     font-weight: 700;
@@ -206,7 +214,8 @@
     min-height: 36px;
   }
   button.gl-chip:hover {
-    border-color: var(--ink-dim);
+    border-color: var(--accent-ink);
+    color: var(--accent-ink);
   }
   .gl-chip[aria-pressed="true"] {
     background: var(--ink);
@@ -249,17 +258,20 @@
     position: relative;
     background: var(--surface);
     border: 1px solid var(--rule);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     color: var(--ink);
+    box-shadow: var(--shadow-sm);
   }
   .gl-panel--raised {
     background: var(--surface-2);
   }
   .gl-panel--sheet {
-    /* Call-sheet ruling: a hard cream border and a mono masthead. */
+    /* Call-sheet ruling: a crisp ink border, a navy masthead, and the faint blue lines of a
+       printed form. */
     background: var(--surface);
     border: 1.5px solid var(--ink);
-    border-radius: 0;
+    border-radius: var(--radius);
+    overflow: hidden;
   }
   .gl-panel__head {
     display: flex;
@@ -275,10 +287,16 @@
     text-transform: uppercase;
   }
   .gl-panel--sheet > .gl-panel__head {
-    background: var(--ink);
-    color: var(--bg);
-    border-bottom-color: var(--ink);
+    /* a navy masthead re-scopes ink so labels inside it (ty-label uses --ink-dim) stay legible */
+    --ink: var(--on-navy);
+    --ink-dim: #b9d3ea;
+    --rule: #3a5480;
+    --accent-ink: var(--carolina-hi);
+    background: var(--navy);
+    color: var(--on-navy);
+    border-bottom-color: var(--navy);
   }
+
   .gl-panel__body {
     padding: var(--s4);
   }
@@ -302,6 +320,7 @@
     place-items: center;
     padding: var(--s4);
     background: var(--scrim);
+    backdrop-filter: blur(3px);
     animation: gl-rise var(--d2) var(--e-out) both;
   }
   .gl-dialog {
@@ -311,9 +330,9 @@
     overflow: auto;
     background: var(--surface);
     border: 1.5px solid var(--ink);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     color: var(--ink);
-    box-shadow: 6px 6px 0 var(--bg), 6px 6px 0 1.5px var(--ink-faint);
+    box-shadow: var(--shadow-lg);
   }
   .gl-dialog--wide {
     width: min(100%, 720px);
@@ -325,6 +344,7 @@
     gap: var(--s3);
     padding: var(--s2) var(--s3) var(--s2) var(--s4);
     border-bottom: 1px solid var(--rule);
+    background: var(--surface-2);
     font-family: var(--f-mono);
     font-weight: 700;
     font-size: var(--t-micro);
@@ -396,7 +416,7 @@
     color: var(--ink);
   }
   .gl-tabs__tab[aria-selected="true"] {
-    color: var(--ink);
+    color: var(--accent-ink);
   }
   .gl-tabs__tab[aria-selected="true"]::after {
     content: "";
@@ -405,7 +425,8 @@
     right: 0.8em;
     bottom: -1px;
     height: 3px;
-    background: var(--ink);
+    border-radius: 3px 3px 0 0;
+    background: var(--accent-ink);
   }
   .gl-tabs__panel {
     padding-top: var(--s4);
@@ -429,7 +450,7 @@
     width: 48px;
     height: 26px;
     border: 1.5px solid var(--ink-dim);
-    border-radius: 2px;
+    border-radius: 999px;
     background: var(--surface-2);
     transition: background-color var(--d2) var(--e-out), border-color var(--d2) var(--e-out);
   }
@@ -439,17 +460,17 @@
     left: 3px;
     width: 17px;
     height: 17px;
-    border-radius: 1px;
+    border-radius: 50%;
     background: var(--ink-dim);
     transition: transform var(--d2) var(--e-snap), background-color var(--d2) var(--e-out);
   }
   .gl-switch[aria-checked="true"] .gl-switch__track {
-    background: var(--ink);
-    border-color: var(--ink);
+    background: var(--navy);
+    border-color: var(--navy);
   }
   .gl-switch[aria-checked="true"] .gl-switch__thumb {
     transform: translateX(22px);
-    background: var(--bg);
+    background: var(--on-navy);
   }
   .gl-switch__state {
     font-family: var(--f-mono);
@@ -501,7 +522,8 @@
     font-weight: 700;
     font-size: var(--t-small);
     letter-spacing: 0.02em;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
     pointer-events: auto;
     animation: gl-rise var(--d2) var(--e-out) both;
   }
@@ -520,7 +542,7 @@
     cursor: pointer;
   }
   .gl-toast__close:hover {
-    background: rgba(14, 13, 12, 0.1);
+    background: rgba(245, 242, 235, 0.14);
   }
   .gl-toast__close:focus-visible {
     outline-color: var(--bg);
@@ -546,7 +568,7 @@
   .gl-status[data-verdict="miss"],
   .gl-cell[data-verdict="miss"] {
     background-color: var(--miss);
-    color: var(--ink);
+    color: var(--miss-ink);
     border-color: var(--miss);
   }
   .gl-status[data-verdict="na"],
@@ -567,13 +589,13 @@
   [data-colorblind="true"] .gl-cell[data-verdict="close"] {
     background-image: repeating-linear-gradient(
       -45deg,
-      rgba(255, 255, 255, 0.26) 0 4px,
+      rgba(42, 20, 0, 0.16) 0 4px,
       transparent 4px 10px
     );
   }
   [data-colorblind="true"] .gl-status[data-verdict="match"],
   [data-colorblind="true"] .gl-cell[data-verdict="match"] {
-    background-image: radial-gradient(rgba(255, 255, 255, 0.28) 1.3px, transparent 1.6px);
+    background-image: radial-gradient(rgba(4, 23, 46, 0.2) 1.3px, transparent 1.6px);
     background-size: 8px 8px;
     box-shadow: inset 0 0 0 2px var(--green-ink);
   }
@@ -588,7 +610,7 @@
     padding: 8px 9px 7px;
     border: 1.5px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface-2);
+    background: var(--surface);
     color: var(--ink);
     overflow: hidden;
   }

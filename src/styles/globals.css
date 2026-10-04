@@ -19,6 +19,27 @@
   --color-red-rec: var(--red-rec);
   --color-ink-faint: var(--ink-faint);
   --color-ink-hair: var(--ink-hair);
+  --color-miss-ink: var(--miss-ink);
+  --color-paper: var(--paper);
+  --color-paper-warm: var(--paper-warm);
+  --color-paper-cool: var(--paper-cool);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-carolina: var(--carolina);
+  --color-carolina-hi: var(--carolina-hi);
+  --color-navy: var(--navy);
+  --color-on-navy: var(--on-navy);
+  --color-marker: var(--marker);
+  --color-rec: var(--rec);
+  --color-green-deep: var(--green-deep);
+  --color-ink-section: var(--ink-section);
+  --color-on-ink: var(--on-ink);
+  --color-on-ink-dim: var(--on-ink-dim);
+  --radius-film: var(--radius);
+  --radius-film-lg: var(--radius-lg);
+  --shadow-paper-sm: var(--shadow-sm);
+  --shadow-paper: var(--shadow-md);
+  --shadow-paper-lg: var(--shadow-lg);
   --font-display: var(--font-display, ui-sans-serif, system-ui, sans-serif);
   --font-serif: var(--font-serif, ui-serif, Georgia, serif);
   --font-mono: var(--font-mono, ui-monospace, monospace);
@@ -30,7 +51,7 @@
 /* ---- Base ------------------------------------------------------------------------------ */
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
   /* Body face: a plain grotesk from the system, as on the SFA site. next/font supplies the
      three web families (display, serif accent, mono); see src/app/layout.tsx. */
   --font-body: "Helvetica Neue", Helvetica, Arial, ui-sans-serif, system-ui, sans-serif;
@@ -51,18 +72,23 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* A highlighter pass over the script (SFA marker yellow). */
 ::selection {
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--marker);
+  color: var(--ink-section);
 }
 
-/* Focus: invisible for mouse users, unmissable for keyboard users. Cream, not REC: REC is a
-   loss accent only. A dark halo keeps the ring visible on cream surfaces too. */
+/* Focus: invisible for mouse users, unmissable for keyboard users. Carolina, as on SFA (the
+   darker text cut, 5:1 on paper; the light cut inside ink sections). Never REC. */
 :focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--accent-ink);
   outline-offset: 3px;
-  box-shadow: 0 0 0 5px var(--bg);
-  border-radius: 2px;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 22%, transparent);
+  border-radius: 3px;
+}
+
+a {
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
 }
 
 [id] {
@@ -143,6 +169,8 @@ body {
     font-weight: 700;
   }
   .prose-film a {
+    color: var(--accent-ink);
+    font-weight: 700;
     text-decoration: underline;
     text-underline-offset: 3px;
     text-decoration-thickness: 1px;

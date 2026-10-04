@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, fireEvent, render, screen, cleanup } from '@testing-library/react';
+import { act, fireEvent, render, screen, cleanup, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STORAGE_KEYS } from '@/config/game';
 import { dateInResetZone } from '@/lib/dates';
@@ -47,10 +47,19 @@ describe('<Leader>', () => {
   it('any key skips it', async () => {
     render(<Leader />);
     await screen.findByTestId('leader');
-    act(() => {
-      fireEvent.keyDown(window, { key: 'Tab' });
-    });
-    expect(screen.queryByTestId('leader')).toBeNull();
+    // The key listener is attached in a passive effect after the overlay commits; under full-suite
+    // load that effect can land a tick after findByTestId resolves. Retry the key press until the
+    // listener is live (each press is a fresh key), with a budget well under the 1.2s auto-finish
+    // so the test proves the key skipped it rather than the countdown ending on its own.
+    await waitFor(
+      () => {
+        act(() => {
+          fireEvent.keyDown(window, { key: 'Tab' });
+        });
+        expect(screen.queryByTestId('leader')).toBeNull();
+      },
+      { timeout: 600, interval: 10 },
+    );
   });
 
   it('a click skips it', async () => {

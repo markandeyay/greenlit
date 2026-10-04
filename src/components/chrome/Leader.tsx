@@ -138,7 +138,7 @@ export function Leader() {
   if (phase === 'idle') return null;
 
   return (
-    <div className="gl-leader" data-state={phase} aria-hidden="true" data-testid="leader" onClick={skip}>
+    <div className="gl-leader t-ink" data-state={phase} aria-hidden="true" data-testid="leader" onClick={skip}>
       <span className="gl-leader__corner gl-leader__corner--tl" />
       <span className="gl-leader__corner gl-leader__corner--tr" />
       <span className="gl-leader__corner gl-leader__corner--bl" />

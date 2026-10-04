@@ -21,7 +21,7 @@ export interface TabsProps {
 
 /**
  * WAI-ARIA tabs with roving tabindex. Arrow Left / Right move and activate, Home / End jump.
- * Edge-print styling: frame lines between tabs, a cream bar under the selected one.
+ * Edge-print styling: frame lines between tabs, a Carolina bar under the selected one.
  */
 export function Tabs({ tabs, label, value, defaultValue, onChange, className }: TabsProps) {
   const base = useId();

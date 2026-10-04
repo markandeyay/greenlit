@@ -31,7 +31,7 @@ export function DailyImage({ reelNumber, grainSrc, kicker = "Today's reel" }: Da
           src={grainSrc}
           width={OG_SIZE.width}
           height={OG_SIZE.height}
-          style={{ position: 'absolute', top: 0, left: 0, width: OG_SIZE.width, height: OG_SIZE.height, opacity: 1 }}
+          style={{ position: 'absolute', top: 0, left: 0, width: OG_SIZE.width, height: OG_SIZE.height, opacity: 0.07 }}
         />
       ) : null}
       <div
@@ -41,7 +41,7 @@ export function DailyImage({ reelNumber, grainSrc, kicker = "Today's reel" }: Da
           left: 0,
           width: OG_SIZE.width,
           height: OG_SIZE.height,
-          backgroundImage: `radial-gradient(ellipse at center, rgba(14,13,12,0.05) 0%, rgba(14,13,12,0.55) 45%, rgba(14,13,12,0.9) 85%)`,
+          backgroundImage: `radial-gradient(ellipse at center, rgba(255,255,255,0.55) 0%, rgba(245,242,235,0) 55%, rgba(120,90,40,0.08) 100%)`,
         }}
       />
       <OgStripes />
@@ -65,7 +65,9 @@ export function DailyImage({ reelNumber, grainSrc, kicker = "Today's reel" }: Da
               display: 'flex',
               marginTop: 28,
               padding: '10px 28px',
-              border: `3px solid ${OG.ink}`,
+              background: OG.navy,
+              color: OG.onNavy,
+              borderRadius: 8,
               fontSize: 56,
               letterSpacing: 2,
             }}

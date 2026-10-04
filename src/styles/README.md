@@ -1,8 +1,10 @@
 # Design system (WS4)
 
-The look is a projection booth: black stock, cream print, slates, timecode and leader. It is
-ported from the UNC Student Film Association site (`sfawebsite/app/styles/*`, `app/layout.tsx`,
-`components/engine/Chrome.tsx`, `components/lot/*`, `lib/fx/loader.ts`) and refitted for a dark,
+The look is SFA script paper: a printed screenplay on a sunny production-office desk. Cream paper,
+ink type, Carolina and navy as brand accents, REC red as the one hot color, marker yellow as a
+highlighter, and projector black kept for accent SECTIONS (`.t-ink`: the slate board, the leader,
+the footer's tail-leader bands, the trailer frame). Ported from the UNC Student Film Association
+site (`sfawebsite/app/styles/*`). Live reference of every component and state: **`/dev/kitchen-sink`**.
 single-surface game. Live reference of every component and state: **`/dev/kitchen-sink`**.
 
 ## Files
@@ -18,13 +20,22 @@ single-surface game. Live reference of every component and state: **`/dev/kitche
 
 | Token | Value | SFA origin |
 |---|---|---|
-| `--bg` | `#0e0d0c` | `--ink` (the screening-room dark) |
-| `--ink` | `#f5f2eb` | `--paper` (script paper) |
-| `--surface` / `--surface-2` | `#171513` / `#221f1c` | ink lifted in two steps |
-| `--ink-dim` | `#a8a196` | `rgba(245,242,235,.62)` on ink, flattened (7.6:1) |
-| `--rule` | `#36332f` | `--ink-hair` / 16% paper on ink, flattened |
-| `--red-rec` | `#f04a42` | `--rec #E0261F`, lifted from 4.1:1 to 5.3:1 so it passes AA as text |
-| `--green`, `--amber`, `--miss` | doc 6.2 values | status only; SFA has no equivalent |
+| `--bg` | `#f5f2eb` | `--paper` (script paper) |
+| `--surface` / `--surface-2` | `#fbf9f4` / `#efe9dc` | a fresh sheet / `--paper-warm` |
+| `--ink` | `#1a1714` | `--ink`, a touch warmer |
+| `--ink-dim` | `#4a4640` | `--ink-soft` (8.6:1 on paper) |
+| `--rule` | `#d9d3c7` | `--ink-hair` on paper, flattened |
+| `--red-rec` | `#c4211b` | `--rec #E0261F` cut to 5.3:1 for text; the dot itself uses `--rec` |
+| `--green` / `--green-ink` | `#3dbe78` / `#06210f` | status only (7.2:1); `--green-deep #17733f` is the text-size cut (win stamp) |
+| `--amber` / `--amber-ink` | `#f2c14e` / `#2a1a00` | SFA marker yellow, status only (10:1) |
+| `--miss` / `--miss-ink` | `#e2dccf` / `#1a1714` | a light warm gray tile |
+| `--accent` / `--accent-ink` | `#4b9cd3` / `#2a6a99` | Carolina; the ink cut carries links, active nav, focus rings |
+| `--navy` / `--on-navy` | `#13294b` / `#f2f5f8` | call-sheet mastheads, table heads, selected options, switches |
+| `--ink-section` / `--on-ink` | `#0e0d0c` / `#f5f2eb` | projector black for `.t-ink` accent sections |
+
+`.t-ink` and `.t-navy` (in tokens.css) re-scope the surface tokens, so any primitive works inside
+an accent section. Shadows are soft and warm (`--shadow-sm/md/lg`); radii are `--radius` 6px and
+`--radius-lg` 10px.
 
 Spacing `--s1..--s10` (4px base), type scale `--t-mega..--t-micro`, tracking `--tr-*`, leading
 `--lh-*`, eases `--e-out / --e-inout / --e-soft / --e-snap` and durations `--d1..--d5` are the SFA
@@ -56,7 +67,7 @@ Courier Prime at label size is always 700 (SFA rule). Numbers use `tabular-nums`
 - `EndCredits` credit roll (role right, name left). `Footer` is THE END bracketed by tail leader with TMDB attribution.
 - `TimecodeClock` countdown to the next reset as `TC HH:MM:SS:FF` (24 fps); placeholder until mounted; `role="timer"` with a minute-level label.
 - `Leader` Academy countdown 8 to 2, about 1.2s, first visit per New York day, skippable, aria-hidden, off under reduced motion. `replayLeader()` replays it.
-- `Grain` fixed SVG-noise grain plus vignette, pointer-events none.
+- `Grain` a faint, still paper-fiber texture (multiply) with a warm edge falloff, pointer-events none.
 
 ## Primitives (`src/components/ui`, import from `@/components/ui`)
 
