@@ -464,6 +464,10 @@ The full typed contract is `src/lib/types.ts`. These items extend or clarify the
 10. **Search index file:** `public/search-index.json` is `SearchIndexFile { v: 1, films: SearchIndexEntry[] }`.
 11. **Client persistence:** `ClientSettings` (localStorage `gl_settings`), `LocalStatsFile` (`gl_stats`). Keys in `src/config/game.ts`.
 12. **Policy constants** stated in prose (loss = 11, rate limits, 60 day scheduling window, 365 day cooldown, weekly 3 of 7, anti-cheat thresholds, pitch slug and note rules, launch date) live in `src/config/game.ts`. `RULES` in `rules.ts` stays exactly as 4.3.
+13. **Numeric comparison math** lives in `src/lib/verdicts.ts` and is the single definition used by the evaluator and the Call Sheet. Box office: match when max/min <= 1.10, close when max/min <= 2.0, `na` if either side is unknown. Year and score: match on equality, close within the band. Direction `up` means the answer is larger.
+14. **Data access** goes only through the `Repo` interface in `src/server/db/repo.ts` (`getRepo()`). Without Supabase env vars it is an in-memory repo seeded from `src/server/db/fixtures/library.json` (a `LibrarySnapshot`) with a deterministic schedule from launch day to today + 60.
+15. **Session** lookup is `getCurrentUser()` in `src/server/auth.ts` (implemented by WS7).
+16. **Calendar math** (New York day, reel number, next reset, DST safe) lives in `src/lib/dates.ts`. Title matching for search lives in `src/lib/search.ts`.
 
 ---
 

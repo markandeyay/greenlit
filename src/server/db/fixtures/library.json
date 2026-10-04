@@ -1,0 +1,62 @@
+{
+  "v": 1,
+  "generatedAt": "2026-10-04T00:00:00.000Z",
+  "source": "fixture",
+  "films": [
+    {"id": 27205, "title": "Inception", "originalTitle": null, "releaseYear": 2010, "releaseDate": "2010-07-15", "posterPath": null, "backdropPath": null, "runtimeMin": 148, "boxOfficeUsd": 839030630, "scoreSnapshot": 84, "studioId": 1, "directorUnit": {"ids": [525], "display": "Christopher Nolan"}, "leadPersonId": 6193, "supportingIds": [24045, 27578, 2524, 3899], "genreIds": [28, 878, 12], "trailerYoutube": null, "tagline": "Your mind is the scene of the crime.", "keywords": ["dream", "heist", "subconscious", "corporate espionage"], "popularity": 90, "isPlayable": true, "isAnswerEligible": true},
+    {"id": 155, "title": "The Dark Knight", "originalTitle": null, "releaseYear": 2008, "releaseDate": "2008-07-16", "posterPath": null, "backdropPath": null, "runtimeMin": 152, "boxOfficeUsd": 1006234167, "scoreSnapshot": 85, "studioId": 1, "directorUnit": {"ids": [525], "display": "Christopher Nolan"}, "leadPersonId": 3894, "supportingIds": [1810, 64, 3895, 6383], "genreIds": [18, 28, 80, 53], "trailerYoutube": null, "tagline": "Welcome to a world without rules.", "keywords": ["joker", "vigilante", "gotham", "chaos"], "popularity": 95, "isPlayable": true, "isAnswerEligible": true},
+    {"id": 275, "title": "Fargo", "originalTitle": null, "releaseYear": 1996, "releaseDate": "1996-03-08", "posterPath": null, "backdropPath": null, "runtimeMin": 98, "boxOfficeUsd": 60611975, "scoreSnapshot": 79, "studioId": 2, "directorUnit": {"ids": [1223, 1224], "display": "The Coens"}, "leadPersonId": 3910, "supportingIds": [884, 4442, 4443], "genreIds": [80, 18, 53], "trailerYoutube": null, "tagline": "A lot can happen in the middle of nowhere.", "keywords": ["kidnapping", "minnesota", "snow", "police chief"], "popularity": 40, "isPlayable": true, "isAnswerEligible": true},
+    {"id": 6977, "title": "No Country for Old Men", "originalTitle": null, "releaseYear": 2007, "releaseDate": "2007-11-09", "posterPath": null, "backdropPath": null, "runtimeMin": 122, "boxOfficeUsd": 171627166, "scoreSnapshot": 79, "studioId": 3, "directorUnit": {"ids": [1223, 1224], "display": "The Coens"}, "leadPersonId": 2176, "supportingIds": [3810, 2178, 2179], "genreIds": [80, 18, 53], "trailerYoutube": null, "tagline": "There are no clean getaways.", "keywords": ["drug money", "hitman", "texas", "coin toss"], "popularity": 45, "isPlayable": true, "isAnswerEligible": true}
+  ],
+  "people": [
+    {"id": 525, "name": "Christopher Nolan", "profilePath": null},
+    {"id": 1223, "name": "Joel Coen", "profilePath": null},
+    {"id": 1224, "name": "Ethan Coen", "profilePath": null},
+    {"id": 6193, "name": "Leonardo DiCaprio", "profilePath": null},
+    {"id": 24045, "name": "Joseph Gordon-Levitt", "profilePath": null},
+    {"id": 27578, "name": "Elliot Page", "profilePath": null},
+    {"id": 2524, "name": "Tom Hardy", "profilePath": null},
+    {"id": 3899, "name": "Ken Watanabe", "profilePath": null},
+    {"id": 3894, "name": "Christian Bale", "profilePath": null},
+    {"id": 1810, "name": "Heath Ledger", "profilePath": null},
+    {"id": 64, "name": "Gary Oldman", "profilePath": null},
+    {"id": 3895, "name": "Michael Caine", "profilePath": null},
+    {"id": 6383, "name": "Aaron Eckhart", "profilePath": null},
+    {"id": 3910, "name": "Frances McDormand", "profilePath": null},
+    {"id": 884, "name": "Steve Buscemi", "profilePath": null},
+    {"id": 4442, "name": "William H. Macy", "profilePath": null},
+    {"id": 4443, "name": "Peter Stormare", "profilePath": null},
+    {"id": 2176, "name": "Tommy Lee Jones", "profilePath": null},
+    {"id": 3810, "name": "Javier Bardem", "profilePath": null},
+    {"id": 2178, "name": "Josh Brolin", "profilePath": null},
+    {"id": 2179, "name": "Woody Harrelson", "profilePath": null}
+  ],
+  "studios": [
+    {"id": 1, "name": "Warner Bros.", "logoPath": null},
+    {"id": 2, "name": "Gramercy", "logoPath": null},
+    {"id": 3, "name": "Miramax", "logoPath": null}
+  ],
+  "studioAliases": [
+    {"rawCompanyId": 174, "studioId": 1},
+    {"rawCompanyId": 14, "studioId": 3}
+  ],
+  "genres": [
+    {"id": 28, "name": "Action"}, {"id": 12, "name": "Adventure"}, {"id": 16, "name": "Animation"},
+    {"id": 35, "name": "Comedy"}, {"id": 80, "name": "Crime"}, {"id": 99, "name": "Documentary"},
+    {"id": 18, "name": "Drama"}, {"id": 10751, "name": "Family"}, {"id": 14, "name": "Fantasy"},
+    {"id": 36, "name": "History"}, {"id": 27, "name": "Horror"}, {"id": 10402, "name": "Music"},
+    {"id": 9648, "name": "Mystery"}, {"id": 10749, "name": "Romance"}, {"id": 878, "name": "Science Fiction"},
+    {"id": 10770, "name": "TV Movie"}, {"id": 53, "name": "Thriller"}, {"id": 10752, "name": "War"},
+    {"id": 37, "name": "Western"}
+  ],
+  "certifications": [
+    {"filmId": 27205, "region": "US", "rating": "PG-13"}, {"filmId": 27205, "region": "GB", "rating": "12A"},
+    {"filmId": 155, "region": "US", "rating": "PG-13"}, {"filmId": 155, "region": "GB", "rating": "12A"},
+    {"filmId": 275, "region": "US", "rating": "R"}, {"filmId": 275, "region": "GB", "rating": "18"},
+    {"filmId": 6977, "region": "US", "rating": "R"}
+  ],
+  "awards": [
+    {"filmId": 275, "text": "Won Best Original Screenplay"},
+    {"filmId": 6977, "text": "Won Best Picture"}
+  ]
+}

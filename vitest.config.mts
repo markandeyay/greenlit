@@ -6,7 +6,12 @@ import { fileURLToPath } from 'node:url';
 // the DOM with a `// @vitest-environment jsdom` comment at the top of the file.
 export default defineConfig({
   plugins: [react()],
-  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      'server-only': fileURLToPath(new URL('./tests/mocks/empty.ts', import.meta.url)),
+    },
+  },
   test: {
     include: ['tests/unit/**/*.test.{ts,tsx}'],
     environment: 'node',
