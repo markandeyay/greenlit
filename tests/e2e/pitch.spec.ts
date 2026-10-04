@@ -51,7 +51,7 @@ test('pitch: create, a friend plays the link in a fresh context, the creator see
     await expect(fp.getByRole('heading', { level: 1 })).toContainText('pitch');
     await expect(searchInput(fp)).toBeVisible();
     // Pitches offer a single note slot (the creator's note) after PITCH.noteUnlockAfter takes.
-    await expect(fp.getByText(`Unlocks after take ${PITCH.noteUnlockAfter}`)).toBeVisible();
+    await expect(fp.getByText(`Unlocks after take ${PITCH.noteUnlockAfter}`).first()).toBeVisible();
 
     const [wrong] = wrongFilms(pitched, 1);
     await guessFilm(fp, wrong!);

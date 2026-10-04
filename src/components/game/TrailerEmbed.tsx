@@ -6,10 +6,10 @@ const YT_ID = /^[A-Za-z0-9_-]{6,20}$/;
 
 /**
  * Trailer with a click-to-load facade: nothing loads from YouTube until the player asks, and
- * then only from youtube-nocookie.com.
+ * then only from youtube-nocookie.com. With autoLoad the ask happened elsewhere (a button).
  */
-export function TrailerEmbed({ youtubeKey, title }: { youtubeKey: string; title: string }) {
-  const [loaded, setLoaded] = useState(false);
+export function TrailerEmbed({ youtubeKey, title, autoLoad = false }: { youtubeKey: string; title: string; /** The player already asked (e.g. a Watch trailer button): load right away. */ autoLoad?: boolean }) {
+  const [loaded, setLoaded] = useState(autoLoad);
   if (!YT_ID.test(youtubeKey)) return null;
   const src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(youtubeKey)}?autoplay=1&rel=0&modestbranding=1`;
   return (

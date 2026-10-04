@@ -5,7 +5,6 @@ import { notFound } from 'next/navigation';
 import { APP_NAME } from '@/config/brand';
 import { PITCH } from '@/config/game';
 import { RULES } from '@/config/rules';
-import { Breadcrumb } from '@/components/chrome/Breadcrumb';
 import { Accent } from '@/components/ui/Heading';
 import { GameBoard } from '@/components/game/GameBoard';
 import { initialPlayFor } from '@/server/engine/initial-play';
@@ -32,10 +31,7 @@ export default async function PitchPlayPage({ params }: { params: Promise<{ slug
   if (!exists) notFound();
   const [region, initialPlay] = await Promise.all([playerRegion(), initialPlayFor('pitch', slug)]);
   return (
-    <main className="l-page pt-5 pb-16 sm:pt-8">
-      <div className="mb-4">
-        <Breadcrumb items={[{ label: APP_NAME, href: '/' }, { label: 'A pitch' }]} />
-      </div>
+    <main className="l-page pt-3 pb-16 sm:pt-6">
       <GameBoard
         kind="pitch"
         initialPlay={initialPlay}
@@ -51,9 +47,8 @@ export default async function PitchPlayPage({ params }: { params: Promise<{ slug
         }
         playerRegion={region}
         intro={
-          <p className="mt-4 text-[15px] text-ink-dim">
-            Someone picked a film and dared you to name it. Same rules as the daily: {RULES.maxGuesses} takes. If they
-            left a note, it unlocks as a Script Note after take {PITCH.noteUnlockAfter}.
+          <p className="mt-2 text-[15px] text-ink-dim">
+            A friend picked a film. Name it in {RULES.maxGuesses} takes. Their note unlocks after take {PITCH.noteUnlockAfter}.
           </p>
         }
       />

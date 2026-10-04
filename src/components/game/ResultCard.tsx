@@ -1,15 +1,15 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useId, useState, type Ref } from 'react';
 import { COPY } from '@/config/brand';
 import { RULES } from '@/config/rules';
 import { ShareSheet } from '@/components/share';
-import { Button, ButtonLink } from '@/components/ui/Button';
-import { Tag } from '@/components/ui/Tag';
+import { Button } from '@/components/ui/Button';
 import { cx } from '@/components/ui/cx';
 import { gameApi } from '@/lib/game/api';
 import { beatPercent, bucketFor, withSelf } from '@/lib/game/stats';
-import { pad2, percent, plural } from '@/lib/format';
+import { percent, plural } from '@/lib/format';
 import type { DailyStatsResponse, GuessFeedback, ClassicKind, Reveal } from '@/lib/types';
 import { DistributionChart } from './DistributionChart';
 import { Poster } from './Poster';
@@ -39,9 +39,10 @@ export function resultHeadline(status: 'won' | 'lost', takes: number, maxGuesses
 }
 
 /**
- * The end of the round (Sections 4.1, 7.3): GREENLIT rubber stamp or SENT TO TURNAROUND with a
- * projector flicker, the reveal (poster, title, year, director, tagline, trailer), the global
- * take distribution for the daily, and the share sheet ("Post your take" is the primary action).
+ * The end of the round (Sections 4.1, 7.3), as one clean card: the GREENLIT rubber stamp (or SENT
+ * TO TURNAROUND with a projector flicker), the reveal (poster, title, year, director), "You beat N%
+ * of players", then the share artifact. The trailer waits behind a small button; where to go next
+ * is a row of quiet links.
  */
 export function ResultCard({
   kind,
@@ -64,115 +65,111 @@ export function ResultCard({
   return (
     <section
       aria-labelledby={headingId}
-      className={cx('relative overflow-hidden border-[1.5px] border-ink bg-surface', live && 'anim-rise')}
+      data-testid="result-card"
+      data-status={status}
+      className={cx('gm-result', live && 'anim-rise')}
     >
-      <div className="flex items-center justify-between gap-3 border-b border-rule px-4 py-2 font-mono text-[11px] font-bold tracking-[0.12em] text-ink-dim uppercase sm:px-5">
-        <span className="truncate">INT. THE SCREENING ROOM - NIGHT</span>
-        <span className="flex-none tabular-nums">
-          {reelNumber ? `${COPY.reelLabel(reelNumber)} · ` : ''}Tk {pad2(takes)}
-        </span>
-      </div>
-
-      <div className="px-4 pt-6 pb-5 sm:px-6">
-        <div className={cx('flex flex-col items-start gap-5', !won && live && 'gm-flicker')}>
-          <p
-            aria-hidden="true"
-            className={cx(
-              'gm-stamp my-5 ml-2 text-[clamp(28px,7vw,54px)]',
-              won ? 'gm-stamp--win' : 'gm-stamp--loss',
-              live && 'anim-stamp',
-            )}
-          >
-            {stamp}
+      <div className={cx('flex flex-col items-center text-center', !won && live && 'gm-flicker')}>
+        <p
+          aria-hidden="true"
+          className={cx(
+            'gm-stamp text-[clamp(26px,7vw,44px)]',
+            won ? 'gm-stamp--win' : 'gm-stamp--loss',
+            live && 'anim-stamp',
+          )}
+        >
+          {stamp}
+        </p>
+        <h2
+          ref={headingRef}
+          id={headingId}
+          tabIndex={-1}
+          className="mt-5 text-[clamp(18px,4.4vw,22px)] leading-snug font-semibold outline-none"
+        >
+          <span className="sr-only">{stamp}. </span>
+          {resultHeadline(status, takes)}
+        </h2>
+        {hintsUsed > 0 ? (
+          <p className="mt-1 text-[14px] text-ink-dim">
+            <span aria-hidden="true">📝 </span>
+            {plural(hintsUsed, 'script note')} used
           </p>
-          <div className="min-w-0">
-            <h2 ref={headingRef} id={headingId} tabIndex={-1} className="ty-display text-[clamp(22px,4vw,32px)] leading-none outline-none">
-              <span className="sr-only">{stamp}. </span>
-              {resultHeadline(status, takes)}
-            </h2>
-            {hintsUsed > 0 ? (
-              <p className="mt-2 font-mono text-[12px] text-ink-dim">
-                <span aria-hidden="true">📝 </span>
-                {plural(hintsUsed, 'script note')} used
-              </p>
-            ) : null}
-          </div>
-        </div>
-
-        {reveal ? <RevealBlock reveal={reveal} won={won} /> : null}
-
-        {kind === 'daily' && reelNumber ? (
-          <DailyStats reelNumber={reelNumber} status={status} takes={takes} loadStats={loadStats} animate={live} />
         ) : null}
-
-        <div className="mt-6 border-t border-rule pt-5">
-          <p className="ty-label mb-3 text-ink">Post your take</p>
-          <ShareSheet kind={kind} ref={gameRef} reelNumber={reelNumber} feedback={feedback} status={status} hintsUsed={hintsUsed} />
-        </div>
-
-        {kind === 'vault' ? (
-          <p className="mt-4 font-mono text-[12px] text-ink-dim">Vault reels are for the love of it: no leaderboard credit.</p>
-        ) : null}
-
-        {kind === 'unlimited' ? (
-          <p className="mt-4 font-mono text-[12px] text-ink-dim">Dailies reels are practice: no streaks, no leaderboard.</p>
-        ) : null}
-
-        <nav aria-label="What next" className="mt-5 flex flex-wrap gap-3">
-          {onNextReel ? (
-            <Button variant="solid" size="sm" onClick={onNextReel}>
-              Next reel
-            </Button>
-          ) : null}
-          {kind !== 'daily' ? (
-            <ButtonLink href="/" variant="outline" size="sm">
-              Today&apos;s reel
-            </ButtonLink>
-          ) : null}
-          <ButtonLink href="/vault" variant="outline" size="sm">
-            Open the Vault
-          </ButtonLink>
-          <ButtonLink href="/pitch" variant="ghost" size="sm">
-            {kind === 'pitch' ? 'Pitch one back' : COPY.pitchCta}
-          </ButtonLink>
-        </nav>
       </div>
+
+      {reveal ? <RevealBlock reveal={reveal} won={won} /> : null}
+
+      {kind === 'daily' && reelNumber ? (
+        <DailyStats reelNumber={reelNumber} status={status} takes={takes} loadStats={loadStats} animate={live} />
+      ) : null}
+
+      <div className="mt-6">
+        <ShareSheet kind={kind} ref={gameRef} reelNumber={reelNumber} feedback={feedback} status={status} hintsUsed={hintsUsed} />
+      </div>
+
+      {kind === 'vault' ? (
+        <p className="mt-4 text-center text-[13px] text-ink-dim">Vault reels are for the love of it: no leaderboard credit.</p>
+      ) : null}
+
+      {kind === 'unlimited' ? (
+        <p className="mt-4 text-center text-[13px] text-ink-dim">Dailies reels are practice: no streaks, no leaderboard.</p>
+      ) : null}
+
+      <nav aria-label="What next" className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-rule pt-4">
+        {onNextReel ? (
+          <Button variant="solid" size="sm" onClick={onNextReel}>
+            Next reel
+          </Button>
+        ) : null}
+        {kind !== 'daily' ? (
+          <Link href="/" className="gm-quietlink">
+            Today&apos;s reel
+          </Link>
+        ) : null}
+        <Link href="/vault" className="gm-quietlink">
+          Open the Vault
+        </Link>
+        <Link href="/pitch" className="gm-quietlink">
+          {kind === 'pitch' ? 'Pitch one back' : COPY.pitchCta}
+        </Link>
+      </nav>
     </section>
   );
 }
 
 function RevealBlock({ reveal, won }: { reveal: Reveal; won: boolean }) {
+  const [trailer, setTrailer] = useState(false);
   return (
-    <div className="mt-6 grid gap-5 sm:grid-cols-[auto_1fr]">
-      <div className="flex justify-center sm:block">
-        <Poster
-          title={reveal.title}
-          year={reveal.year}
-          posterPath={reveal.posterPath}
-          size="lg"
-          alt={`Poster for ${reveal.title}`}
-          className="shadow-[var(--shadow-lg)]"
-        />
-      </div>
-      <div className="min-w-0">
-        <p className="ty-micro text-ink-dim">{won ? 'You found' : 'The film was'}</p>
-        <p className="ty-display mt-2 text-[clamp(34px,6vw,56px)] leading-[0.9]">{reveal.title}</p>
-        <p className="mt-3 font-mono text-[14px] font-bold">
-          <span className="tabular-nums">{reveal.year}</span>
-          <span className="text-ink-dim"> · Directed by </span>
-          {reveal.director}
-        </p>
-        {reveal.tagline ? (
-          <p className="mt-4 max-w-[46ch] font-serif text-[clamp(19px,2.4vw,24px)] leading-snug text-ink italic">
-            &ldquo;{reveal.tagline}&rdquo;
-          </p>
-        ) : null}
-        {reveal.trailerYoutube ? (
-          <div className="mt-5 max-w-[560px]">
-            <TrailerEmbed youtubeKey={reveal.trailerYoutube} title={reveal.title} />
+    <div className="mt-6 flex flex-col items-center text-center">
+      <Poster
+        title={reveal.title}
+        year={reveal.year}
+        posterPath={reveal.posterPath}
+        size="lg"
+        alt={`Poster for ${reveal.title}`}
+        className="gm-result__poster"
+      />
+      <p className="mt-4 text-[13px] text-ink-dim">{won ? 'You found' : 'The film was'}</p>
+      <p className="ty-display mt-1 text-[clamp(30px,8vw,44px)] leading-[0.95]">{reveal.title}</p>
+      <p className="mt-2 text-[15px]">
+        <span className="tabular-nums">{reveal.year}</span>
+        <span className="text-ink-dim"> · Directed by </span>
+        {reveal.director}
+      </p>
+      {reveal.tagline ? (
+        <p className="mt-2 max-w-[40ch] font-serif text-[18px] leading-snug text-ink-dim italic">&ldquo;{reveal.tagline}&rdquo;</p>
+      ) : null}
+      {reveal.trailerYoutube ? (
+        trailer ? (
+          <div className="mt-4 w-full max-w-[560px]">
+            <TrailerEmbed youtubeKey={reveal.trailerYoutube} title={reveal.title} autoLoad />
           </div>
-        ) : null}
-      </div>
+        ) : (
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => setTrailer(true)} aria-label={`Watch trailer: ${reveal.title}`}>
+            <span aria-hidden="true">▶ </span>Watch trailer
+          </Button>
+        )
+      ) : null}
     </div>
   );
 }
@@ -221,19 +218,19 @@ function DailyStats({
   else line = `${percent(view.wins, view.plays)}% of players greenlit it today. Tomorrow is a new reel.`;
 
   return (
-    <div className="mt-6 border-t border-rule pt-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="ty-display text-[clamp(20px,3vw,26px)] leading-none" aria-live="polite">
-          {line}
-        </p>
-        {state === 'ready' && others > 0 ? (
-          <Tag tone="dim">{plural(view.plays, 'player')}</Tag>
-        ) : null}
-      </div>
+    <div className="mt-6 rounded-[var(--radius)] bg-surface-2 px-4 py-3 text-center">
+      <p className="ty-display text-[clamp(20px,5vw,24px)] leading-tight" aria-live="polite">
+        {line}
+      </p>
       {state === 'ready' && others > 0 ? (
-        <div className="mt-4">
-          <DistributionChart distribution={view.distribution} plays={view.plays} you={bucket} animate={animate} />
-        </div>
+        <details className="gm-dist mt-2 text-left">
+          <summary className="cursor-pointer text-center text-[13px] text-ink-dim">
+            How {plural(view.plays, 'player')} did
+          </summary>
+          <div className="mt-3">
+            <DistributionChart distribution={view.distribution} plays={view.plays} you={bucket} animate={animate} />
+          </div>
+        </details>
       ) : null}
     </div>
   );

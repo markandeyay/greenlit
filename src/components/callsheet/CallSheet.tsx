@@ -111,6 +111,9 @@ function NumericCell({ range }: { range: NumericRange }) {
   );
 }
 
+/** Cut actors listed by name before the rest fold into "+N more" (keeps the panel calm). */
+const CUT_CAST_SHOWN = 6;
+
 function buildRows(s: CallSheetState, playerRegion: RegionCode | undefined): Row[] {
   const rows: Row[] = [];
 
@@ -174,12 +177,20 @@ function buildRows(s: CallSheetState, playerRegion: RegionCode | undefined): Row
       content: (
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <CutTag />
-          {s.cast.cut.map((c, i) => (
+          {s.cast.cut.slice(0, CUT_CAST_SHOWN).map((c, i, shown) => (
             <span key={c.personId}>
               <Struck>{c.name}</Struck>
-              {i < s.cast.cut.length - 1 ? <Dim>,</Dim> : null}
+              {i < shown.length - 1 ? <Dim>,</Dim> : null}
             </span>
           ))}
+          {s.cast.cut.length > CUT_CAST_SHOWN ? (
+            <Dim>
+              +{s.cast.cut.length - CUT_CAST_SHOWN} more
+              <span className="sr-only">
+                : {s.cast.cut.slice(CUT_CAST_SHOWN).map((c) => c.name).join(', ')}
+              </span>
+            </Dim>
+          ) : null}
         </span>
       ),
     });
@@ -284,12 +295,13 @@ function buildRows(s: CallSheetState, playerRegion: RegionCode | undefined): Row
 
 export function CallSheetHeader({ reelNumber, take, maxGuesses, id }: { reelNumber: number | null; take: number; maxGuesses: number; id?: string }) {
   return (
-    <h2 id={id} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-mono text-xs tracking-widest text-ink">
-      <span className="font-display text-sm font-bold">{COPY.callSheet}</span>
-      <span aria-hidden="true" className="text-ink-dim">·</span>
-      <span className="tabular-nums">{reelNumber === null ? 'Pitch' : COPY.reelLabel(reelNumber)}</span>
-      <span aria-hidden="true" className="text-ink-dim">·</span>
-      <span className="tabular-nums">{COPY.takeLabel(take, maxGuesses)}</span>
+    <h2 id={id} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-ink">
+      <span className="font-display text-[15px] font-bold tracking-wide">{COPY.callSheet}</span>
+      <span className="whitespace-nowrap text-[12px] text-ink-dim tabular-nums">
+        {reelNumber === null ? 'Pitch' : COPY.reelLabel(reelNumber)}
+        <span aria-hidden="true"> · </span>
+        {COPY.takeLabel(take, maxGuesses)}
+      </span>
     </h2>
   );
 }
@@ -323,24 +335,20 @@ export function CallSheet({
       data-variant={variant}
       className={[
         'bg-surface text-ink',
-        variant === 'panel' ? 'rounded-sm border border-rule shadow-[0_0_0_1px_var(--bg)]' : 'border-y border-rule',
+        variant === 'panel' ? 'rounded-[var(--radius-lg)] border border-rule' : 'border-b border-rule',
         className,
       ]
         .filter(Boolean)
         .join(' ')}
     >
-      <div className="border-b-4 border-double border-rule px-3 py-2.5 sm:px-4">
+      <div className="border-b border-rule px-3 py-2.5 sm:px-4">
         <CallSheetHeader id={headingId} reelNumber={reelNumber} take={take} maxGuesses={maxGuesses} />
       </div>
 
       {empty ? (
-        <div className="border-b border-rule px-3 py-3 sm:px-4">
-          <p className="font-mono text-[11px] tracking-widest text-ink-dim">01</p>
-          <p className="font-display text-base font-bold uppercase tracking-tight">INT. THE CALL SHEET - NIGHT</p>
-          <p className="mt-1 text-sm text-ink-dim">
-            Nothing on the sheet <em className="font-serif">yet</em>. Make your first take and every clue lands here.
-          </p>
-        </div>
+        <p className="px-3 py-4 text-[15px] leading-snug text-ink-dim sm:px-4">
+          Every clue from your guesses collects here: the director, the cast, a year range and more.
+        </p>
       ) : null}
 
       {state.conflict ? (
@@ -349,6 +357,7 @@ export function CallSheet({
         </p>
       ) : null}
 
+      {empty ? null : (
       <table aria-labelledby={headingId} className="w-full border-collapse text-sm">
         <thead className="sr-only">
           <tr>
@@ -366,7 +375,7 @@ export function CallSheet({
                 data-row={row.id}
                 data-highlighted={isOn || undefined}
                 className={[
-                  row.continuation ? '' : 'border-t border-rule first:border-t-0',
+                  row.continuation ? '' : 'border-t border-ink-hair first:border-t-0',
                   'align-top motion-safe:transition-colors',
                   isOn ? 'bg-surface-2' : '',
                 ].join(' ')}
@@ -374,7 +383,7 @@ export function CallSheet({
                 <th
                   scope="row"
                   className={[
-                    'w-[6.5rem] py-2 pl-3 pr-2 text-left font-mono text-[11px] font-normal uppercase tracking-widest text-ink-dim sm:w-28 sm:pl-4',
+                    'w-[6.5rem] py-2 pl-3 pr-2 text-left text-[12px] font-normal text-ink-dim sm:w-28 sm:pl-4',
                     isOn ? 'shadow-[inset_3px_0_0_var(--ink)]' : '',
                   ].join(' ')}
                 >
@@ -383,7 +392,7 @@ export function CallSheet({
                       type="button"
                       aria-pressed={isOn}
                       onClick={() => select(row)}
-                      className="-mx-1 -my-0.5 rounded-sm px-1 py-0.5 text-left uppercase hover:text-ink focus-visible:text-ink"
+                      className="-mx-1 -my-0.5 rounded-sm px-1 py-0.5 text-left underline decoration-ink-faint decoration-dotted underline-offset-4 hover:text-ink focus-visible:text-ink"
                     >
                       <span className={row.continuation ? 'sr-only' : undefined}>{row.label}</span>
                       {row.continuation ? <span aria-hidden="true">&nbsp;</span> : null}
@@ -395,12 +404,13 @@ export function CallSheet({
                     <span className={row.continuation ? 'sr-only' : undefined}>{row.label}</span>
                   )}
                 </th>
-                <td className="min-w-0 py-2 pr-3 sm:pr-4">{empty ? <Dim>TBD</Dim> : row.content}</td>
+                <td className="min-w-0 py-2 pr-3 sm:pr-4">{row.content}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
+      )}
     </section>
   );
 }

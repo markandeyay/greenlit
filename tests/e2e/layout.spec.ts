@@ -2,7 +2,6 @@
 // the sticky panel on desktop.
 import type { Page } from '@playwright/test';
 import { COPY } from '../../src/config/brand';
-import { RULES } from '../../src/config/rules';
 import { todayAnswer, todayNumber, wrongFilms } from './helpers/answer';
 import { guessFilm, playWrong, waitForBoard } from './helpers/game';
 import { test, expect } from './fixtures';
@@ -50,6 +49,30 @@ test.describe('375px layout', () => {
     });
   }
 
+  for (const width of [375, 390]) {
+    test(`the header fits inside ${width}px with every control visible`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto('/modes');
+      await page.waitForLoadState('networkidle');
+      const r = await page.evaluate(() => {
+        const vw = window.innerWidth;
+        const out: string[] = [];
+        for (const el of Array.from(document.querySelectorAll<HTMLElement>('header.gl-header *'))) {
+          if (el.closest('[hidden]')) continue;
+          const b = el.getBoundingClientRect();
+          if (b.width > 0 && b.right > vw + 0.5) out.push(`${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)} right=${Math.round(b.right)}`);
+        }
+        return { vw, out, scrollWidth: document.documentElement.scrollWidth };
+      });
+      expect(r.out, r.out.join('\n')).toEqual([]);
+      expect(r.scrollWidth).toBeLessThanOrEqual(r.vw);
+      for (const name of ['How to play', 'Stats', 'Settings']) {
+        await expect(page.getByRole('banner').getByRole('link', { name })).toBeInViewport();
+      }
+      await expect(page.getByRole('button', { name: 'Open menu' })).toBeInViewport();
+    });
+  }
+
   test('no horizontal scroll mid-round, on the result card, and on a Vault reel', async ({ page }) => {
     await page.goto('/');
     await waitForBoard(page);
@@ -81,7 +104,6 @@ test.describe('375px layout', () => {
     await expect(strip).toBeVisible();
     await expect(strip).toHaveAttribute('aria-expanded', 'false');
     await expect(strip).toContainText('confirmed');
-    await expect(strip).toContainText(COPY.takeLabel(2, RULES.maxGuesses));
     const panelId = await strip.getAttribute('aria-controls');
     const panel = page.locator(`[id="${panelId}"]`);
     await expect(panel).toBeHidden();
@@ -130,7 +152,7 @@ test('loading the board does not shift the page (CLS)', async ({ page }) => {
   });
   await page.goto('/');
   await waitForBoard(page);
-  await page.getByText('Quiet on set').waitFor();
+  await page.getByText('Guess any movie to start').waitFor();
   const cls = await page.evaluate(
     () =>
       new Promise<number>((resolve) => {

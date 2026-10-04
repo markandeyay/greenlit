@@ -11,20 +11,24 @@ afterEach(cleanup);
 const target = { kind: 'daily' as const, ref: '4' };
 
 describe('ScriptNotes', () => {
-  it('shows locked notes with their unlock takes and does not fetch options', () => {
+  it('is a quiet locked chip before the first unlock: next unlock take, nothing to expand, no fetch', () => {
     const loadOptions = vi.fn();
     render(<ScriptNotes target={target} take={1} status="in_progress" hints={[]} onReveal={vi.fn()} loadOptions={loadOptions} />);
+    expect(screen.getByRole('heading', { name: /Script Notes/ })).toBeInTheDocument();
     expect(screen.getByText(`Unlocks after take ${RULES.hintUnlockAfter[0]}`)).toBeInTheDocument();
-    expect(screen.getByText(`Unlocks after take ${RULES.hintUnlockAfter[1]}`)).toBeInTheDocument();
+    expect(screen.queryByText(`Unlocks after take ${RULES.hintUnlockAfter[1]}`)).toBeNull();
+    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.queryByRole('radio')).toBeNull();
     expect(loadOptions).not.toHaveBeenCalled();
   });
 
-  it('lets the player pick a note by type label, then reveal it', async () => {
+  it('opens by itself at the unlock, lets the player pick a note by type label, then reveal it', async () => {
     const loadOptions = vi.fn(async () => ({ slot1: ['tagline' as const, 'awards' as const], slot2: [] }));
     const onReveal = vi.fn(async () => true);
     render(
       <ScriptNotes target={target} take={RULES.hintUnlockAfter[0]} status="in_progress" hints={[]} onReveal={onReveal} loadOptions={loadOptions} />,
     );
+    expect(screen.getByRole('button', { name: /Script Notes.*1 note ready/ })).toHaveAttribute('aria-expanded', 'true');
     const user = userEvent.setup();
     const reveal = await screen.findByRole('button', { name: 'Reveal note 1' });
     expect(reveal).toBeDisabled();
@@ -35,7 +39,7 @@ describe('ScriptNotes', () => {
     expect(screen.getByText(`Unlocks after take ${RULES.hintUnlockAfter[1]}`)).toBeInTheDocument();
   });
 
-  it('shows used notes with their content', () => {
+  it('keeps used notes behind the chip after the round, readable on expand', async () => {
     render(
       <ScriptNotes
         target={target}
@@ -46,8 +50,12 @@ describe('ScriptNotes', () => {
         loadOptions={vi.fn()}
       />,
     );
-    expect(screen.getByText(/One ring/)).toBeInTheDocument();
-    expect(screen.getByText('1 / 2 used')).toBeInTheDocument();
-    expect(screen.getByText('Not used')).toBeInTheDocument();
+    const chip = screen.getByRole('button', { name: /Script Notes.*1 \/ 2 used/ });
+    expect(chip).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText(/One ring/)).not.toBeVisible();
+    await userEvent.setup().click(chip);
+    expect(chip).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText(/One ring/)).toBeVisible();
+    expect(screen.getByText('Not used')).toBeVisible();
   });
 });

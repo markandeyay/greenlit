@@ -6,14 +6,17 @@ import { COPY } from '@/config/brand';
 import { RULES } from '@/config/rules';
 import { CallSheet, CallSheetStrip } from '@/components/callsheet';
 import { Button } from '@/components/ui/Button';
+import { IconButton } from '@/components/ui/IconButton';
+import { IconHelp } from '@/components/ui/icons';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { useGame } from '@/lib/game/useGame';
 import { describeTake } from '@/lib/game/state';
-import { pad2 } from '@/lib/format';
+import { markHowtoSeen, shouldAutoOpenHowto } from '@/lib/game/howto';
 import type { HintSlot, HintType, ClassicKind, PlayStateResponse, RegionCode, SearchResult } from '@/lib/types';
 import { GiveUp } from './GiveUp';
 import { GuessRow, PendingRow } from './GuessRow';
+import { HowToPlaySheet } from './HowToPlaySheet';
 import { ResultCard } from './ResultCard';
 import { ScriptNotes } from './ScriptNotes';
 import { SearchBox } from './SearchBox';
@@ -26,12 +29,12 @@ export interface GameBoardProps {
   reelNumber: number | null;
   date: string | null;
   theme: string | null;
-  /** Slate kicker, e.g. "Today's reel". */
+  /** Context for the slate, read by screen readers, e.g. "Today's reel". */
   kicker: string;
   /** Slate title (h1). */
   title: ReactNode;
   playerRegion?: RegionCode;
-  /** Optional block under the slate (e.g. the pitch intro). */
+  /** Optional block under the slate (e.g. the pitch intro). Keep it to one short line. */
   intro?: ReactNode;
   /** Server-rendered play state (no answer unless the play is finished). */
   initialPlay?: PlayStateResponse | null;
@@ -40,9 +43,10 @@ export interface GameBoardProps {
 }
 
 /**
- * The game (Sections 4.1, 6.5): slate, search, Script Notes, Walk away and the guess list on the
- * left; the sticky Call Sheet on the right (>= 1024px) or as a strip under the search (mobile).
- * State comes from the API only; the answer is known only once the server sends the reveal.
+ * The game (Sections 4.1, 6.5), game first: a compact slate, the search, then the takes (newest
+ * on top). Script Notes and Walk away sit on one quiet line under the search. The Call Sheet is a
+ * one-line sticky strip on mobile and a sticky side panel at >= 1024px. State comes from the API
+ * only; the answer is known only once the server sends the reveal.
  */
 export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, title, playerRegion, intro, initialPlay, onNextReel }: GameBoardProps) {
   const { toast } = useToast();
@@ -53,6 +57,7 @@ export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, titl
   const autoFocused = useRef(false);
   const [highlight, setHighlight] = useState<{ indices: number[]; rowId: string | null }>({ indices: [], rowId: null });
   const [freshSlots, setFreshSlots] = useState<ReadonlySet<HintSlot>>(new Set());
+  const [howto, setHowto] = useState(false);
 
   const take = state.feedback.length;
   const finished = state.status !== 'in_progress';
@@ -61,6 +66,19 @@ export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, titl
   const clapKey = Math.max(0, take - state.animateFrom);
   const last = state.feedback[take - 1];
   const announcement = last && take > state.animateFrom ? describeTake(last, take) : '';
+  const fresh = ready && take === 0 && !finished;
+
+  // First visit: open the quick rules once the empty board is on screen.
+  useEffect(() => {
+    if (!fresh || !shouldAutoOpenHowto()) return;
+    const t = window.setTimeout(() => setHowto(true), 250);
+    return () => window.clearTimeout(t);
+  }, [fresh]);
+
+  const closeHowto = useCallback(() => {
+    setHowto(false);
+    markHowtoSeen();
+  }, []);
 
   // Focus the search once the round is loaded (desktop pointers only, so phones do not pop the keyboard).
   useEffect(() => {
@@ -111,10 +129,38 @@ export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, titl
     playerRegion,
   };
 
+  const left = RULES.maxGuesses - take;
+  const walkAway =
+    ready && !finished && take > 0 ? (
+      <>
+        <span className="gm-quiet tabular-nums max-sm:sr-only">
+          {left} {left === 1 ? 'take' : 'takes'} left
+        </span>
+        <GiveUp onConfirm={() => void giveUp()} disabled={!!state.pending || state.givingUp} take={take} maxGuesses={RULES.maxGuesses} />
+      </>
+    ) : null;
+
   return (
-    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] lg:gap-8">
-      <div className="min-w-0">
-        <Slate title={title} kicker={kicker} take={take} date={date} scene={theme} clapKey={clapKey} />
+    <div className="gm-board">
+      <div className="gm-board__main">
+        <Slate
+          title={title}
+          kicker={kicker}
+          take={take}
+          date={date}
+          scene={theme}
+          clapKey={clapKey}
+          actions={
+            <IconButton
+              label="How to play"
+              size="sm"
+              icon={<IconHelp />}
+              className="gm-slate__help"
+              onClick={() => setHowto(true)}
+              aria-haspopup="dialog"
+            />
+          }
+        />
         {intro}
 
         <p className="sr-only" aria-live="polite" aria-atomic="true">
@@ -122,15 +168,15 @@ export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, titl
         </p>
 
         {state.phase === 'loading' ? (
-          // Reserve roughly the height of the search, Script Notes and empty takes so the page does
-          // not jump (CLS) when the play state arrives.
-          <div className="mt-6 min-h-[420px]" data-testid="board-loading">
-            <div className="flex min-h-[96px] items-center justify-center border border-dashed border-rule">
+          // Reserve roughly the height of the search and the empty state so the page does not
+          // jump (CLS) when the play state arrives.
+          <div className="mt-3 min-h-[180px]" data-testid="board-loading">
+            <div className="flex min-h-[60px] items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-rule">
               <Spinner label="Loading the reel" showLabel />
             </div>
           </div>
         ) : state.phase === 'error' ? (
-          <div role="alert" className="mt-6 border border-rule bg-surface p-5">
+          <div role="alert" className="mt-3 rounded-[var(--radius-lg)] border border-rule bg-surface p-5">
             <p className="ty-display text-2xl">The projector jammed</p>
             <p className="mt-2 text-ink-dim">{state.loadError}</p>
             <Button className="mt-4" variant="solid" size="sm" onClick={() => void reload()}>
@@ -138,7 +184,7 @@ export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, titl
             </Button>
           </div>
         ) : finished ? (
-          <div className="mt-6">
+          <div className="mt-4">
             <ResultCard
               kind={kind}
               gameRef={gameRef}
@@ -153,10 +199,12 @@ export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, titl
             />
           </div>
         ) : (
-          <div className="mt-6">
+          <div className="mt-3">
             <SearchBox
               inputRef={searchRef}
-              label={`Take ${pad2(take + 1)} · Name a film`}
+              label={`Take ${take + 1} · Name a film`}
+              hideLabel
+              placeholder="Guess a movie"
               guessedIds={guessedIds}
               busy={!!state.pending || state.givingUp}
               onSelect={onSelect}
@@ -164,32 +212,25 @@ export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, titl
           </div>
         )}
 
-        {ready && take > 0 ? <CallSheetStrip {...sheetProps} className="sticky top-0 z-20 mt-4 lg:hidden" /> : null}
-
         {ready && (!finished || state.hints.length > 0) ? (
           <ScriptNotes
-            className="mt-4"
+            className="mt-2"
             target={target}
             take={take}
             status={state.status}
             hints={state.hints}
             onReveal={onReveal}
             freshSlots={freshSlots}
+            aside={walkAway}
           />
         ) : null}
 
-        {ready && !finished && take > 0 ? (
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <p className="font-mono text-[12px] text-ink-dim">
-              {RULES.maxGuesses - take} {RULES.maxGuesses - take === 1 ? 'take' : 'takes'} left
-            </p>
-            <GiveUp onConfirm={() => void giveUp()} disabled={!!state.pending || state.givingUp} take={take} maxGuesses={RULES.maxGuesses} />
-          </div>
-        ) : null}
+        {ready && take > 0 ? <CallSheetStrip {...sheetProps} className="gm-strip sticky top-0 z-20 mt-2 lg:hidden" /> : null}
 
-        <section aria-label="Your takes" className="mt-6">
-          {ready && take === 0 && !state.pending && !finished ? <EmptyTakes /> : null}
-          <ol className="grid grid-cols-1 gap-3" reversed>
+        <section aria-label="Your takes" className={finished ? 'mt-6' : 'mt-3'}>
+          {finished && take > 0 ? <h2 className="gm-quiet mb-2">Your takes</h2> : null}
+          {fresh && !state.pending ? <EmptyTakes onHelp={() => setHowto(true)} /> : null}
+          <ol className="grid grid-cols-1 gap-2.5" reversed>
             {state.pending ? (
               <li>
                 <PendingRow film={state.pending} take={take + 1} />
@@ -214,23 +255,24 @@ export function GameBoard({ kind, gameRef, reelNumber, date, theme, kicker, titl
         </section>
       </div>
 
-      <aside className="hidden lg:block" aria-label={COPY.callSheet}>
+      <aside className="gm-board__side hidden lg:block" aria-label={COPY.callSheet}>
         <div className="sticky top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
           {ready ? <CallSheet variant="panel" {...sheetProps} /> : null}
         </div>
       </aside>
+
+      <HowToPlaySheet open={howto} onClose={closeHowto} />
     </div>
   );
 }
 
-function EmptyTakes() {
+function EmptyTakes({ onHelp }: { onHelp: () => void }) {
   return (
-    <div className="border border-dashed border-rule px-5 py-8 text-center">
-      <p className="ty-display text-[clamp(22px,4vw,30px)]">Quiet on set</p>
-      <p className="mx-auto mt-2 max-w-[44ch] text-[15px] text-ink-dim">
-        Name any film to roll your first take. Each take shows how it compares with the mystery film, and the
-        Call Sheet keeps score of everything you learn.
-      </p>
+    <div className="gm-empty">
+      <p>Guess any movie to start. Colors show how close you are.</p>
+      <button type="button" className="gm-textbtn mt-1" onClick={onHelp} aria-haspopup="dialog">
+        How to play
+      </button>
     </div>
   );
 }

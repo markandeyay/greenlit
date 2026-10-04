@@ -13,12 +13,12 @@
   }
   .gm-slate__stick {
     position: relative;
-    height: 22px;
+    height: 13px;
     margin-inline: 2px;
     border: 1.5px solid var(--ink-section);
     border-bottom: 0;
     border-radius: 6px 6px 0 0;
-    background: repeating-linear-gradient(-58deg, var(--ink-section) 0 16px, var(--surface) 16px 32px);
+    background: repeating-linear-gradient(-58deg, var(--ink-section) 0 12px, var(--surface) 12px 24px);
     transform-origin: 0 100%;
     transform: rotate(0deg);
   }
@@ -29,29 +29,41 @@
     position: absolute;
     left: -2px;
     bottom: -5px;
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: var(--ink-section);
     box-shadow: 0 0 0 2px var(--surface);
   }
   /* The board is a real clapperboard: projector black with chalk type (.t-ink in markup). */
   .gm-slate__board {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 64px;
+    padding: 9px 12px 9px 14px;
     border: 1.5px solid var(--ink-section);
     border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     background:
       radial-gradient(120% 140% at 0% 0%, rgba(245, 242, 235, 0.07), transparent 55%),
       var(--bg);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
   }
-  .gm-slate__grid > * + * {
-    border-top: 1px solid var(--ink-faint);
+  .gm-slate__take {
+    color: var(--ink);
+    font-size: 1.25em;
+  }
+  .gm-slate__help {
+    color: var(--ink-dim);
+  }
+  .gm-slate__help:hover {
+    color: var(--ink);
   }
   .gm-slate__field {
     font-family: var(--f-mono);
     font-weight: 700;
-    font-size: 10.5px;
-    letter-spacing: 0.12em;
+    font-size: 11px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--ink-dim);
   }
@@ -67,10 +79,10 @@
     gap: 3px;
   }
   .gm-pip {
-    width: 10px;
-    height: 14px;
+    width: 7px;
+    height: 7px;
     border: 1.5px solid var(--ink-dim);
-    border-radius: 1px;
+    border-radius: 50%;
   }
   .gm-pip[data-on="true"] {
     background: var(--ink);
@@ -78,7 +90,7 @@
   }
   .gm-pip[data-now="true"] {
     outline: 1.5px solid var(--ink);
-    outline-offset: 2px;
+    outline-offset: 1.5px;
   }
 
   @keyframes gm-clap {
@@ -197,10 +209,8 @@
   .gm-person {
     display: grid;
     grid-template-rows: auto auto;
-    gap: 5px;
-    width: var(--tile-w, 76px);
-    flex: none;
-    scroll-snap-align: start;
+    gap: 4px;
+    min-width: 0;
   }
   .gm-person__tile {
     position: relative;
@@ -267,21 +277,31 @@
   }
   .gm-person__glyph {
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: 3px;
+    right: 3px;
     display: grid;
     place-items: center;
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     background: var(--green-ink);
     color: var(--green);
-    font-size: 13px;
+    font-size: 11px;
+  }
+  .gm-person__glyph .gl-glyph {
+    font-size: 11px;
   }
   .gm-person__tag {
     position: absolute;
-    left: 4px;
-    bottom: 4px;
+    left: 50%;
+    bottom: 3px;
+    transform: translateX(-50%);
+  }
+  .gm-person__tag .gl-tag,
+  .gm-person__unit .gl-tag {
+    padding: 0 3px;
+    font-size: 9px;
+    line-height: 1.5;
   }
   .gm-person__tag .gl-tag {
     background: var(--green-ink);
@@ -290,58 +310,131 @@
   }
   .gm-person__unit {
     position: absolute;
-    left: 4px;
-    top: 4px;
+    left: 3px;
+    top: 3px;
   }
   .gm-person__name {
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.2;
+    text-align: center;
     color: var(--ink);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     min-height: 2.4em;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+  @media (min-width: 640px) {
+    .gm-person__name { font-size: 12px; }
   }
   .gm-person[data-verdict="miss"] .gm-person__name,
   .gm-person[data-verdict="empty"] .gm-person__name {
     color: var(--ink-dim);
   }
 
+  /* Six compact tiles that always fit the row: director, lead, then the supporting cast. */
   .gm-people {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
-    scrollbar-width: thin;
-    padding-bottom: 4px;
-    --tile-w: 66px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
+    --tile-w: 50px; /* drives the initials size in PersonCell */
   }
   @media (min-width: 480px) {
-    .gm-people { --tile-w: 74px; }
+    .gm-people { gap: 8px; --tile-w: 64px; }
   }
-  @media (min-width: 1024px) {
-    .gm-people { --tile-w: 82px; }
+  @media (min-width: 640px) {
+    .gm-people { grid-template-columns: repeat(6, minmax(0, 76px)); gap: 12px; --tile-w: 76px; }
   }
-  @media (min-width: 1280px) {
-    .gm-people { --tile-w: 100px; }
+  .gm-people__caps {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
+    margin: 10px 0 4px;
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: 9px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    white-space: nowrap;
   }
-  .gm-people__sep {
-    flex: none;
-    width: 1px;
-    margin-block: 18px 34px;
-    background: var(--rule);
+  .gm-people__caps > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gm-people__caps > span:nth-child(3) {
+    border-left: 1px solid var(--rule);
+    padding-left: 6px;
+  }
+  @media (min-width: 480px) {
+    .gm-people__caps { gap: 8px; font-size: 10px; letter-spacing: 0.06em; }
+  }
+  @media (min-width: 640px) {
+    .gm-people__caps { grid-template-columns: repeat(6, minmax(0, 76px)); gap: 12px; }
   }
 
   /* ---- Guess row ------------------------------------------------------------------------ */
   .gm-row {
     position: relative;
+    padding: 12px;
     border: 1px solid var(--rule);
     border-radius: var(--radius-lg);
     background: var(--surface);
-    box-shadow: var(--shadow-sm);
     transition: box-shadow var(--d2) var(--e-out), border-color var(--d2) var(--e-out);
+  }
+  @media (min-width: 640px) {
+    .gm-row { padding: 16px; }
+  }
+  .gm-row[data-correct="true"] {
+    border-color: var(--green-deep);
+    box-shadow: 0 0 0 1px var(--green-deep);
+  }
+  .gm-row__take {
+    display: inline-block;
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .gm-row__title {
+    margin-top: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: clamp(19px, 5vw, 24px);
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+  .gm-row__year {
+    margin-left: 8px;
+    font-family: var(--f-body);
+    font-weight: 400;
+    font-size: 0.62em;
+    text-transform: none;
+    color: var(--ink-dim);
+  }
+  .gm-row__cells {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+  }
+  @media (min-width: 640px) {
+    .gm-row__cells { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .gm-row__genres {
+    margin-top: 10px;
+  }
+  .gm-row__genres .gl-chip {
+    min-height: 26px;
+    padding: 0.15em 0.6em;
+    font-size: 12px;
   }
   .gm-row[data-highlighted="true"] {
     border-color: var(--accent-ink);
@@ -353,11 +446,17 @@
   .gm-row[data-new="true"] {
     animation: gl-rise var(--d3) var(--e-out) both;
   }
-  .gm-row .gl-cell {
-    min-height: 70px;
+  .gm-row .gl-cell,
+  .gm-row .gm-info-cell {
+    min-height: 58px;
+    padding: 6px 8px;
   }
   .gm-row .gl-cell__value {
-    font-size: clamp(16px, 4.4vw, 21px);
+    font-size: clamp(16px, 4.4vw, 19px);
+  }
+  .gm-row .gl-cell__label,
+  .gm-row .gl-cell__dir {
+    font-size: 10px;
   }
   .gm-info-cell {
     position: relative;
@@ -386,7 +485,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    min-height: 60px;
+    min-height: 56px;
     padding: 0 14px;
     border: 1.5px solid var(--ink);
     border-radius: var(--radius-lg);
@@ -404,15 +503,15 @@
   .gm-search__input {
     flex: 1;
     min-width: 0;
-    height: 56px;
+    height: 52px;
     background: transparent;
     border: 0;
     outline: none;
     color: var(--ink);
-    font-family: var(--f-mono);
-    font-weight: 700;
-    font-size: 18px;
-    letter-spacing: 0.01em;
+    font-family: var(--f-body);
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: 0;
   }
   .gm-search__input:focus-visible {
     outline: none;
@@ -671,5 +770,208 @@
   .gm-vault-item:hover {
     border-color: var(--accent-ink);
     background: var(--surface);
+  }
+
+  /* ---- Board layout (design brief v2) --------------------------------------------------- */
+  .gm-board {
+    width: 100%;
+  }
+  .gm-board__main {
+    min-width: 0;
+    width: 100%;
+    max-width: 720px;
+    margin-inline: auto;
+  }
+  @media (min-width: 1024px) {
+    .gm-board {
+      display: grid;
+      grid-template-columns: minmax(0, 720px) minmax(300px, 340px);
+      justify-content: center;
+      gap: 40px;
+    }
+    .gm-board__main {
+      margin-inline: 0;
+    }
+    .gm-board__side {
+      padding-top: 13px; /* line up with the slate board, under the sticks */
+    }
+  }
+  .gm-quiet {
+    font-size: 13px;
+    color: var(--ink-dim);
+  }
+  .gm-textbtn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 2px;
+    border: 0;
+    background: transparent;
+    color: var(--ink-dim);
+    font-size: 14px;
+    text-decoration: underline;
+    text-decoration-color: var(--ink-faint);
+    text-underline-offset: 4px;
+    cursor: pointer;
+  }
+  .gm-textbtn:hover {
+    color: var(--ink);
+    text-decoration-color: currentColor;
+  }
+  .gm-textbtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .gm-quietlink {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 14px;
+    color: var(--ink-dim);
+    text-decoration: underline;
+    text-decoration-color: var(--ink-faint);
+    text-underline-offset: 4px;
+  }
+  .gm-quietlink:hover {
+    color: var(--ink);
+    text-decoration-color: currentColor;
+  }
+  .gm-empty {
+    padding: 18px 16px 10px;
+    text-align: center;
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--ink-dim);
+  }
+
+  /* ---- Script Notes chip ------------------------------------------------------------------ */
+  .gm-notes__chip {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    min-height: 36px;
+    padding: 6px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.2;
+    text-align: left;
+  }
+  button.gm-notes__chip {
+    cursor: pointer;
+  }
+  button.gm-notes__chip:hover {
+    border-color: var(--ink-dim);
+  }
+  .gm-notes__chip[data-locked="true"] {
+    border-style: dashed;
+    background: transparent;
+    color: var(--ink-dim);
+  }
+  .gm-notes__status {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 8px;
+    color: var(--ink-dim);
+    font-weight: 400;
+  }
+  .gm-notes__ready {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .gm-notes__ready::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-ink);
+  }
+  .gm-notes__panel {
+    margin-top: 6px;
+    padding: 4px 14px 12px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+
+  /* ---- How to play sheet ------------------------------------------------------------------- */
+  .gm-howto__cell {
+    min-height: 62px !important;
+  }
+  .gm-howto__swatch {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid var(--rule);
+    border-radius: var(--radius);
+  }
+  .gm-howto__word {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    min-width: 56px;
+    height: 28px;
+    padding: 0 6px;
+    border: 1.5px solid var(--rule);
+    border-radius: var(--radius);
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+  @media (max-width: 639px) {
+    /* A bottom sheet on phones. */
+    .gl-dialog-backdrop:has(> .gm-howto) {
+      place-items: end stretch;
+      padding: 0;
+    }
+    .gm-howto {
+      width: 100%;
+      max-height: 92dvh;
+      border-bottom: 0;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+
+  /* ---- Result card (simplified) ----------------------------------------------------------- */
+  .gm-result {
+    position: relative;
+    overflow: hidden;
+    padding: 28px 16px 8px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+  @media (min-width: 640px) {
+    .gm-result { padding: 36px 32px 8px; }
+    .gm-result__poster { width: 156px !important; }
+  }
+  .gm-result__poster {
+    width: 132px !important;
+    box-shadow: 0 0 0 1px var(--ink-faint), var(--shadow-lg);
+  }
+  .gm-dist summary {
+    list-style: none;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: underline;
+    text-decoration-color: var(--ink-faint);
+    text-underline-offset: 4px;
+  }
+  .gm-dist summary::-webkit-details-marker {
+    display: none;
   }
 }

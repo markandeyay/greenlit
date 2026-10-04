@@ -61,9 +61,11 @@ describe('ResultCard', () => {
     expect(shareProps).toHaveBeenCalledWith(
       expect.objectContaining({ kind: 'daily', ref: '4', reelNumber: 4, status: 'won', hintsUsed: 1, feedback }),
     );
-    expect(screen.getByText('Post your take')).toBeInTheDocument();
+    expect(screen.getByTestId('share')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open the Vault' })).toHaveAttribute('href', '/vault');
     expect(document.querySelector('iframe')).toBeNull();
-    await userEvent.setup().click(screen.getByRole('button', { name: /Roll the trailer/ }));
+    // The trailer waits behind a small button and loads only on request.
+    await userEvent.setup().click(screen.getByRole('button', { name: /Watch trailer/ }));
     expect(document.querySelector('iframe')?.getAttribute('src')).toMatch(/^https:\/\/www\.youtube-nocookie\.com\/embed\/abcDEF12345/);
   });
 
@@ -82,7 +84,7 @@ describe('ResultCard', () => {
     );
     expect(screen.getByText(COPY.lossStamp, { selector: '.gm-stamp' })).toBeInTheDocument();
     expect(screen.getByText(/no leaderboard credit/)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Roll the trailer/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Watch trailer/ })).toBeNull();
     await waitFor(() => expect(loadStats).not.toHaveBeenCalled());
   });
 });

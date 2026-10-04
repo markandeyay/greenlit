@@ -15,7 +15,7 @@ async function openToday(page: Page) {
 }
 
 function resultCard(page: Page) {
-  return page.locator('section').filter({ has: page.getByText('INT. THE SCREENING ROOM - NIGHT') }).first();
+  return page.getByTestId('result-card');
 }
 
 const ROW = /^🎬 (?:🟩|🟨|⬛){8}$/u;
@@ -36,7 +36,7 @@ test.describe('daily round', () => {
     await expect(card.getByText(answer.title, { exact: true }).first()).toBeVisible();
     await expect(card.getByText(String(answer.releaseYear)).first()).toBeVisible();
     await expect(page.locator('[data-share-sheet]')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Post your take' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible();
     // The search is gone: the round is over.
     await expect(searchInput(page)).toHaveCount(0);
     await expect(takeRows(page)).toHaveCount(4);
@@ -83,8 +83,9 @@ test.describe('daily round', () => {
     const [first, second] = RULES.hintUnlockAfter;
     await openToday(page);
     const notes = page.locator('section').filter({ has: page.getByRole('heading', { name: COPY.hintsName }) });
+    // Before the first unlock the notes are one quiet chip naming the next unlock take.
     await expect(notes.getByText(`Unlocks after take ${first}`)).toBeVisible();
-    await expect(notes.getByText(`Unlocks after take ${second}`)).toBeVisible();
+    await expect(notes.getByRole('radio')).toHaveCount(0);
 
     const wrong = wrongFilms(answer, second);
     await playWrong(page, wrong.slice(0, first - 1));
@@ -102,7 +103,7 @@ test.describe('daily round', () => {
     await expect(notes.locator('.gm-note-page')).toHaveCount(1);
     await expect(notes.locator('.gm-note-page').first()).not.toBeEmpty();
     await expect(notes.getByText('1 / 2 used')).toBeVisible();
-    await expect(notes.getByText(`Unlocks after take ${second}`)).toBeVisible();
+    await expect(notes.getByText(`Unlocks after take ${second}`).first()).toBeVisible();
 
     await playWrong(page, wrong.slice(first, second));
     const note2 = notes.locator('fieldset').filter({ hasText: 'Note 2' });
@@ -117,6 +118,20 @@ test.describe('daily round', () => {
     // Notes flag the share with a 📝.
     await guessFilm(page, answer);
     await expect(page.getByTestId('share-preview')).toContainText(`Take ${second + 1}/${RULES.maxGuesses} 📝`);
+  });
+
+  test('How to play: the help button opens the quick rules sheet with the legend; Escape closes it', async ({ page }) => {
+    await openToday(page);
+    await page.getByRole('button', { name: 'How to play' }).first().click();
+    const sheet = page.getByRole('dialog', { name: 'How to play' });
+    await expect(sheet).toBeVisible();
+    await expect(sheet.getByRole('group', { name: 'Example guess' }).locator('[role="img"]')).toHaveCount(3);
+    await expect(sheet).toContainText('✓');
+    await expect(sheet).toContainText('≈');
+    await expect(sheet).toContainText('LATER');
+    await page.keyboard.press('Escape');
+    await expect(sheet).toHaveCount(0);
+    await expect(searchInput(page)).toBeVisible();
   });
 
   test('hint API refuses a note before the unlock threshold', async ({ page }) => {

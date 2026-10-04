@@ -55,8 +55,8 @@ describe('CallSheet', () => {
 
   it('shows the empty state before any guess', () => {
     render(<CallSheet feedback={[]} reelNumber={1} take={0} maxGuesses={10} />);
-    expect(screen.getByText('INT. THE CALL SHEET - NIGHT')).toBeInTheDocument();
-    expect(screen.getAllByText('TBD').length).toBeGreaterThan(5);
+    expect(screen.getByText(/Every clue from your guesses collects here/)).toBeInTheDocument();
+    expect(screen.queryByRole('table')).toBeNull();
   });
 
   it('row buttons report guess indices and toggle off', async () => {

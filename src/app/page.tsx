@@ -2,9 +2,6 @@
 // fields (number, date, theme) are read here; the answer never leaves the server.
 import type { Metadata } from 'next';
 import { APP_NAME, COPY } from '@/config/brand';
-import { Breadcrumb } from '@/components/chrome/Breadcrumb';
-import { FilmMicrocopy } from '@/components/chrome/FilmMicrocopy';
-import { reelCode } from '@/components/chrome/timecode';
 import { ButtonLink } from '@/components/ui/Button';
 import { Accent } from '@/components/ui/Heading';
 import { GameBoard } from '@/components/game/GameBoard';
@@ -47,14 +44,7 @@ export default async function TodayPage() {
 
   const [region, initialPlay] = await Promise.all([playerRegion(), initialPlayFor('daily', String(today.number))]);
   return (
-    <main className="l-page pt-5 pb-16 sm:pt-8">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <Breadcrumb
-          decorative
-          items={[{ label: APP_NAME }, { label: today.date.slice(0, 4) }, { label: reelCode(today.number) }]}
-        />
-        <FilmMicrocopy />
-      </div>
+    <main className="l-page pt-3 pb-16 sm:pt-6">
       <GameBoard
         kind="daily"
         gameRef={String(today.number)}

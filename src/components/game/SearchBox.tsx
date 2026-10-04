@@ -30,8 +30,12 @@ export interface SearchBoxProps {
   guessedIds: ReadonlySet<number>;
   /** A guess is in flight: input is read-only and the list is closed. */
   busy?: boolean;
-  /** Visible label text. */
+  /** Label text (the input's accessible name). */
   label: string;
+  /** Keep the label for assistive tech only (compact layouts). */
+  hideLabel?: boolean;
+  /** Placeholder when idle. */
+  placeholder?: string;
   inputRef?: RefObject<HTMLInputElement | null>;
   search?: SearchFn;
   className?: string;
@@ -57,6 +61,8 @@ export function SearchBox({
   guessedIds,
   busy = false,
   label,
+  hideLabel = false,
+  placeholder = 'Start typing a title',
   inputRef,
   search = defaultSearch,
   className,
@@ -199,11 +205,16 @@ export function SearchBox({
 
   return (
     <div className={cx('gm-search relative', className)}>
-      <label htmlFor={`${id}-input`} className="ty-label mb-2 flex items-center justify-between gap-3 text-ink">
+      <label
+        htmlFor={`${id}-input`}
+        className={hideLabel ? 'sr-only' : 'ty-label mb-2 flex items-center justify-between gap-3 text-ink'}
+      >
         <span>{label}</span>
-        <span className="hidden items-center gap-1.5 text-ink-dim sm:inline-flex" aria-hidden="true">
-          Press <span className="gm-kbd">/</span> to search
-        </span>
+        {hideLabel ? null : (
+          <span className="hidden items-center gap-1.5 text-ink-dim sm:inline-flex" aria-hidden="true">
+            Press <span className="gm-kbd">/</span> to search
+          </span>
+        )}
       </label>
       <div className="gm-search__field" data-busy={busy || undefined}>
         <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" className="flex-none text-ink-dim">
@@ -227,7 +238,7 @@ export function SearchBox({
           autoCapitalize="off"
           spellCheck={false}
           enterKeyHint="go"
-          placeholder={busy ? 'Rolling...' : 'Start typing a title'}
+          placeholder={busy ? 'Rolling...' : placeholder}
           className="gm-search__input"
           style={{ outline: "none", boxShadow: "none" }}
           value={query}
@@ -243,7 +254,13 @@ export function SearchBox({
           onBlur={() => setOpen(false)}
           onKeyDown={onKeyDown}
         />
-        {busy || loading ? <Spinner label={busy ? 'Rolling' : 'Searching'} /> : null}
+        {busy || loading ? (
+          <Spinner label={busy ? 'Rolling' : 'Searching'} />
+        ) : hideLabel && !query ? (
+          <span className="gm-kbd hidden lg:inline-grid" aria-hidden="true" title="Press / to search">
+            /
+          </span>
+        ) : null}
       </div>
       <p id={hintId} className="sr-only">
         Type at least {SEARCH.minQueryLength} letters. Picking a film submits your take.
