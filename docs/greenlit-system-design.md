@@ -468,6 +468,8 @@ The full typed contract is `src/lib/types.ts`. These items extend or clarify the
 14. **Data access** goes only through the `Repo` interface in `src/server/db/repo.ts` (`getRepo()`). Without Supabase env vars it is an in-memory repo seeded from `src/server/db/fixtures/library.json` (a `LibrarySnapshot`) with a deterministic schedule from launch day to today + 60.
 15. **Session** lookup is `getCurrentUser()` in `src/server/auth.ts` (implemented by WS7).
 16. **Calendar math** (New York day, reel number, next reset, DST safe) lives in `src/lib/dates.ts`. Title matching for search lives in `src/lib/search.ts`.
+17. **Keyless deployment mode** (no Supabase env vars, e.g. a fresh Vercel deploy): serverless instances do not share memory, so (a) each player's 5 most recent plays are mirrored in a signed httpOnly cookie `gl_plays` (HMAC with `SESSION_SECRET`) and restored on any instance; (b) `Repo.createPitch` returns the stored pitch, and the in-memory repo replaces the slug with an opaque AES-GCM token (not derivable from the film without the server secret) so `/p/<slug>` resolves on any instance. Callers must use the returned slug. Daily stats and leaderboards are per instance in this mode; connect Supabase for durable aggregates and accounts. With Supabase, slugs are the 8 char base36 form from Section 8.
+18. **Supabase bootstrap:** the Supabase repo loads the bundled fixture library into an empty `films` table on first use and writes the default schedule into an empty `puzzles` table. Real TMDB data replaces it via `scripts/ingest`.
 
 ---
 
